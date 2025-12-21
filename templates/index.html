@@ -17,31 +17,32 @@
             --background-gradient-start: #091824;
             --background-gradient-end: #041524;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%);
             min-height: 100vh;
             padding: 12px;
         }
-        
+
         @media (min-width: 768px) {
             body {
                 padding: 20px;
             }
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        
+
+        /* --- Auth Styles --- */
         .auth-container {
             max-width: 420px;
             margin: 60px auto;
@@ -50,14 +51,15 @@
             border-radius: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
-        
+
         @media (min-width: 768px) {
             .auth-container {
                 margin: 100px auto;
                 padding: 40px;
             }
         }
-        
+
+        /* --- Header & Cards --- */
         .main-header {
             background: white;
             padding: 20px;
@@ -65,7 +67,7 @@
             margin-bottom: 16px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.1);
         }
-        
+
         @media (min-width: 768px) {
             .main-header {
                 padding: 24px 28px;
@@ -75,44 +77,44 @@
                 align-items: center;
             }
         }
-        
+
         .header-content {
             margin-bottom: 16px;
         }
-        
+
         @media (min-width: 768px) {
             .header-content {
                 margin-bottom: 0;
             }
         }
-        
+
         h1 {
             color: #333;
             margin-bottom: 8px;
             font-size: 24px;
             font-weight: 600;
         }
-        
+
         @media (min-width: 768px) {
             h1 {
                 font-size: 28px;
             }
         }
-        
+
         h2 {
             color: var(--primary-color);
             margin-bottom: 24px;
             font-size: 22px;
             font-weight: 600;
         }
-        
+
         h3 {
             color: #333;
             margin-bottom: 16px;
             font-size: 18px;
             font-weight: 600;
         }
-        
+
         .card {
             background: white;
             padding: 20px;
@@ -120,18 +122,19 @@
             margin-bottom: 16px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
-        
+
         @media (min-width: 768px) {
             .card {
                 padding: 28px;
                 margin-bottom: 20px;
             }
         }
-        
+
+        /* --- Forms & Buttons --- */
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -139,24 +142,24 @@
             font-weight: 500;
             font-size: 14px;
         }
-        
+
         input, textarea, select {
             width: 100%;
             padding: 14px 16px;
             border: 2px solid #e8e8e8;
             border-radius: 16px;
             font-size: 15px;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: inherit;
             transition: all 0.2s;
             background: #fafafa;
         }
-        
+
         input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
             background: white;
         }
-        
+
         button {
             background: var(--primary-color);
             color: white;
@@ -167,53 +170,54 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: inherit;
             width: 100%;
         }
-        
+
         @media (min-width: 768px) {
             button {
                 width: auto;
             }
         }
-        
+
         button:active {
             transform: scale(0.98);
         }
-        
+
         button:hover {
             background: var(--primary-hover);
         }
-        
+
         button.secondary {
             background: var(--secondary-color);
         }
-        
+
         button.secondary:hover {
             background: var(--secondary-hover);
         }
-        
+
         button.danger {
             background: var(--danger-color);
         }
-        
+
         button.danger:hover {
             background: var(--danger-hover);
         }
-        
+
         button.small {
             padding: 10px 16px;
             font-size: 13px;
             width: auto;
         }
-        
+
+        /* --- List Items --- */
         .list-item {
             background: #bad9f5;
             padding: 16px;
             border-radius: 16px;
             margin-bottom: 12px;
         }
-        
+
         @media (min-width: 768px) {
             .list-item {
                 display: flex;
@@ -221,18 +225,18 @@
                 align-items: flex-start;
             }
         }
-        
+
         .list-item-content {
             flex: 1;
             margin-bottom: 12px;
         }
-        
+
         @media (min-width: 768px) {
             .list-item-content {
                 margin-bottom: 0;
             }
         }
-        
+
         .list-item-title {
             font-weight: 600;
             color: #333;
@@ -240,19 +244,19 @@
             font-size: 15px;
             word-break: break-word;
         }
-        
+
         .list-item-meta {
             font-size: 13px;
             color: #888;
             line-height: 1.5;
         }
-        
+
         .list-item-actions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
         }
-        
+
         .badge {
             display: inline-block;
             padding: 5px 10px;
@@ -261,211 +265,231 @@
             font-weight: 600;
             margin-left: 8px;
         }
-        
+
         .badge.admin {
             background: #ffc107;
             color: #000;
         }
-        
+
         .badge.success {
             background: var(--success-color);
             color: white;
         }
-        
+
         .message {
             padding: 14px;
             border-radius: 16px;
             margin-bottom: 20px;
             font-size: 14px;
         }
-        
+
         .message.error {
             background: #fee;
             color: #c33;
             border: 2px solid #fcc;
         }
-        
+
         .message.success {
             background: #efe;
             color: #363;
             border: 2px solid #cec;
         }
+
+        /* --- MOBILE MENU & TABS --- */
         
+        /* Toggle Button (Mobile Only) */
+        .mobile-menu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1010; /* Above sidebar to allow closing */
+            background: white;
+            border: none;
+            border-radius: 14px;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            transition: transform 0.2s, background 0.2s;
+        }
+        
+        .mobile-menu-toggle:active {
+            transform: scale(0.95);
+        }
+        
+        .hamburger-icon {
+            width: 20px;
+            height: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .hamburger-icon span {
+            width: 100%;
+            height: 2px;
+            background: #333;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Hamburger Animation to 'X' */
+        .mobile-menu-toggle.active .hamburger-icon span:nth-child(1) {
+            transform: translateY(6px) rotate(45deg);
+        }
+        .mobile-menu-toggle.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+        .mobile-menu-toggle.active .hamburger-icon span:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg);
+        }
+        
+        /* Overlay */
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px); /* Sleek glass effect */
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .mobile-menu-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Tabs Container */
         .tabs {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
         }
-        
+
+        /* Mobile Side Menu Styles */
+        @media (max-width: 767px) {
+            .tabs {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 280px;
+                height: 100vh;
+                background: white;
+                flex-direction: column;
+                padding: 90px 16px 20px; /* Space for toggle button */
+                margin: 0;
+                box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+                z-index: 999;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translateX(-100%); /* Hide off-screen */
+                visibility: hidden;
+                overflow-y: auto;
+            }
+            
+            .tabs.active {
+                transform: translateX(0);
+                visibility: visible;
+            }
+            
+            .tab {
+                width: 100%;
+                text-align: left;
+                padding: 16px 20px;
+                background: transparent;
+                border-radius: 12px;
+                color: #555;
+                font-size: 15px;
+                border: 1px solid transparent;
+                margin-bottom: 4px;
+                transition: all 0.2s;
+                white-space: normal;
+            }
+            
+            .tab:hover {
+                background: #f8f9fa;
+            }
+            
+            .tab.active {
+                background: rgba(79, 144, 194, 0.1);
+                color: var(--primary-color);
+                font-weight: 600;
+            }
+            
+            /* Main Header adjustment on mobile to not hide behind button */
+            .main-header {
+                margin-top: 60px;
+            }
+        }
+
+        /* Desktop Styles (Untouched/Preserved) */
         @media (min-width: 768px) {
+            .mobile-menu-toggle {
+                display: none;
+            }
+            
             .tabs {
                 margin-bottom: 20px;
+                overflow-x: auto;
+            }
+            
+            .tab {
+                padding: 12px 20px;
+                background: rgba(255, 255, 255, 0.9);
+                border: none;
+                border-radius: 16px;
+                cursor: pointer;
+                font-weight: 600;
+                color: #666;
+                font-size: 14px;
+                white-space: nowrap;
+                flex-shrink: 0;
+                transition: all 0.2s;
+            }
+            
+            .tab.active {
+                background: white;
+                color: var(--primary-color);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
         }
         
-		.mobile-menu-toggle {
-			display: block;
-			position: fixed;
-			top: 20px;
-			left: 20px;
-			z-index: 1000;
-			background: white;
-			border: none;
-			border-radius: 12px;
-			padding: 12px;
-			cursor: pointer;
-			box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-		}
-
-		@media (min-width: 768px) {
-			.mobile-menu-toggle {
-				display: none;
-			}
-		}
-
-		.hamburger-icon {
-			width: 24px;
-			height: 20px;
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-		}
-
-		.hamburger-icon span {
-			width: 100%;
-			height: 3px;
-			background: #333;
-			border-radius: 2px;
-			transition: all 0.3s;
-		}
-
-		.mobile-menu-overlay {
-			display: none;
-			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background: rgba(0,0,0,0.5);
-			z-index: 999;
-		}
-
-		.mobile-menu-overlay.active {
-			display: block;
-		}
-
-		.tabs {
-			display: flex;
-			gap: 8px;
-			margin-bottom: 16px;
-			overflow-x: auto;
-			-webkit-overflow-scrolling: touch;
-		}
-
-		@media (max-width: 767px) {
-			.tabs {
-				position: fixed;
-				top: 0;
-				left: -280px;
-				width: 280px;
-				height: 100vh;
-				background: white;
-				flex-direction: column;
-				margin: 0;
-				padding: 80px 20px 20px 20px;
-				box-shadow: 2px 0 12px rgba(0,0,0,0.15);
-				z-index: 1000;
-				transition: left 0.3s ease;
-				overflow-y: auto;
-			}
-    
-			.tabs.active {
-				left: 0;
-			}
-		}
-
-		@media (min-width: 768px) {
-			.tabs {
-				margin-bottom: 20px;
-			}
-		}
-
-		.tab {
-			padding: 12px 20px;
-			background: rgba(255, 255, 255, 0.9);
-			border: none;
-			border-radius: 16px;
-			cursor: pointer;
-			font-weight: 600;
-			color: #666;
-			font-size: 14px;
-			white-space: nowrap;
-			flex-shrink: 0;
-			transition: all 0.2s;
-		}
-
-		@media (max-width: 767px) {
-			.tab {
-				width: 100%;
-				text-align: left;
-				background: #f8f9fa;
-				padding: 16px 20px;
-				white-space: normal;
-			}
-		}
-		
-        .tab {
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #666;
-            font-size: 14px;
-            white-space: nowrap;
-            flex-shrink: 0;
-            transition: all 0.2s;
-        }
-        
-        .tab.active {
-            background: white;
-            color: var(--primary-color);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
+        /* --- Utility --- */
         .tab-content {
             display: none;
         }
-        
+
         .tab-content.active {
             display: block;
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
             color: #999;
             font-size: 15px;
         }
-        
+
         .flex {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-        
+
         .hidden {
             display: none;
         }
-        
+
         .user-info {
             color: #666;
             font-size: 14px;
         }
-        
+
         .repo-controls {
             display: flex;
             gap: 10px;
@@ -473,24 +497,24 @@
             flex-wrap: wrap;
             align-items: stretch;
         }
-        
+
         .repo-controls input[type="text"] {
             flex: 1;
             min-width: 200px;
         }
-        
+
         .repo-controls select {
             flex: 1;
             min-width: 160px;
         }
-        
+
         @media (min-width: 768px) {
             .repo-controls select {
                 flex: 0;
                 min-width: 180px;
             }
         }
-        
+
         .sort-toggle {
             background: #fafafa;
             border: 2px solid #e8e8e8;
@@ -505,32 +529,32 @@
             min-width: 140px;
             text-align: center;
         }
-        
+
         @media (min-width: 768px) {
             .sort-toggle {
                 flex: 0;
                 min-width: auto;
             }
         }
-        
+
         .sort-toggle:active {
             transform: scale(0.98);
         }
-        
+
         .sort-toggle:hover {
             background: #e9ecef;
         }
-        
+
         .sort-toggle.active {
             background: var(--primary-color);
             color: white;
             border-color: var(--primary-color);
         }
-        
+
         small {
             font-size: 13px;
         }
-        
+
         .release-body {
             margin-top: 10px;
             font-size: 13px;
@@ -540,7 +564,7 @@
             background: white;
             border-radius: 12px;
         }
-        
+
         @media (max-width: 767px) {
             .main-header button {
                 width: 100%;
@@ -556,7 +580,6 @@
     </style>
 </head>
 <body>
-    <!-- Auth Container -->
     <div id="authContainer" class="auth-container">
         <h2>GitHub Release Monitor</h2>
         <div id="authMessage"></div>
@@ -588,18 +611,17 @@
         </div>
     </div>
     
-    <!-- Main App Container -->
     <div id="appContainer" class="container hidden">
-		<button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
-			<div class="hamburger-icon">
-				<span></span>
-				<span></span>
-				<span></span>
-			</div>
-		</button>
-		<div class="mobile-menu-overlay" onclick="closeMobileMenu()"></div>
-	
-		<div class="main-header">
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+        <div class="mobile-menu-overlay" onclick="closeMobileMenu()"></div>
+    
+        <div class="main-header">
             <div class="header-content">
                 <h1>GitHub Release Monitor</h1>
                 <div class="user-info">
@@ -615,7 +637,6 @@
             <button class="tab" id="adminTabButton" onclick="switchTab('admin')" style="display: none;">Admin Settings</button>
         </div>
         
-        <!-- Repositories Tab -->
         <div id="repositoriesTab" class="tab-content active">
             <div class="card">
                 <h3>Add Repository</h3>
@@ -644,7 +665,6 @@
             </div>
         </div>
         
-        <!-- Endpoints Tab -->
         <div id="endpointsTab" class="tab-content">
             <div class="card">
                 <h3>Add Apprise Endpoint</h3>
@@ -669,7 +689,6 @@
             </div>
         </div>
         
-        <!-- Admin Tab -->
         <div id="adminTab" class="tab-content">
             <div class="card">
                 <h3>Polling Configuration</h3>
@@ -1382,30 +1401,35 @@
                 showMessage('adminMessage', 'Error triggering poll');
             }
         }
-		
-		function toggleMobileMenu() {
-			const tabs = document.querySelector('.tabs');
-			const overlay = document.querySelector('.mobile-menu-overlay');
-			tabs.classList.toggle('active');
-			overlay.classList.toggle('active');
-		}
 
-		function closeMobileMenu() {
-			const tabs = document.querySelector('.tabs');
-			const overlay = document.querySelector('.mobile-menu-overlay');
-			tabs.classList.remove('active');
-			overlay.classList.remove('active');
-		}
+        function toggleMobileMenu() {
+            const tabs = document.querySelector('.tabs');
+            const overlay = document.querySelector('.mobile-menu-overlay');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle');
+            
+            tabs.classList.toggle('active');
+            overlay.classList.toggle('active');
+            toggleBtn.classList.toggle('active');
+        }
 
-		// Close menu when a tab is clicked on mobile
-		document.addEventListener('DOMContentLoaded', function() {
-			if (window.innerWidth < 768) {
-				document.querySelectorAll('.tab').forEach(tab => {
-					tab.addEventListener('click', closeMobileMenu);
-				});
-			}
-		});
-		
+        function closeMobileMenu() {
+            const tabs = document.querySelector('.tabs');
+            const overlay = document.querySelector('.mobile-menu-overlay');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle');
+            
+            tabs.classList.remove('active');
+            overlay.classList.remove('active');
+            toggleBtn.classList.remove('active');
+        }
+
+        // Close menu when a tab is clicked on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth < 768) {
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', closeMobileMenu);
+                });
+            }
+        });
     </script>
 </body>
 </html>
