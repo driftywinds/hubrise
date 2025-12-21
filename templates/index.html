@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/driftywinds/hubrise/refs/heads/main/assets/icon.png">
     <style>
         :root {
-            /* Change these colors to customize the theme */
             --primary-color: #4f90c2;
             --primary-hover: #4277a1;
             --secondary-color: #296da3;
@@ -26,10 +25,16 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 12px;
+        }
+        
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+            }
         }
         
         .container {
@@ -38,48 +43,89 @@
         }
         
         .auth-container {
-            max-width: 400px;
-            margin: 100px auto;
+            max-width: 420px;
+            margin: 60px auto;
             background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 32px 24px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        @media (min-width: 768px) {
+            .auth-container {
+                margin: 100px auto;
+                padding: 40px;
+            }
         }
         
         .main-header {
             background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        
+        @media (min-width: 768px) {
+            .main-header {
+                padding: 24px 28px;
+                margin-bottom: 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+        
+        .header-content {
+            margin-bottom: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .header-content {
+                margin-bottom: 0;
+            }
         }
         
         h1 {
             color: #333;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 28px;
+            }
         }
         
         h2 {
             color: var(--primary-color);
-            margin-bottom: 20px;
-            font-size: 24px;
+            margin-bottom: 24px;
+            font-size: 22px;
+            font-weight: 600;
         }
         
         h3 {
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
             font-size: 18px;
+            font-weight: 600;
         }
         
         .card {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        
+        @media (min-width: 768px) {
+            .card {
+                padding: 28px;
+                margin-bottom: 20px;
+            }
         }
         
         .form-group {
@@ -91,32 +137,48 @@
             margin-bottom: 8px;
             color: #555;
             font-weight: 500;
+            font-size: 14px;
         }
         
         input, textarea, select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border 0.3s;
+            padding: 14px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 16px;
+            font-size: 15px;
+            font-family: system-ui, -apple-system, sans-serif;
+            transition: all 0.2s;
+            background: #fafafa;
         }
         
         input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
+            background: white;
         }
         
         button {
             background: var(--primary-color);
             color: white;
-            padding: 12px 24px;
+            padding: 14px 24px;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.2s;
+            font-family: system-ui, -apple-system, sans-serif;
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            button {
+                width: auto;
+            }
+        }
+        
+        button:active {
+            transform: scale(0.98);
         }
         
         button:hover {
@@ -140,39 +202,61 @@
         }
         
         button.small {
-            padding: 6px 12px;
-            font-size: 12px;
+            padding: 10px 16px;
+            font-size: 13px;
+            width: auto;
         }
         
         .list-item {
             background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+        
+        @media (min-width: 768px) {
+            .list-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
         }
         
         .list-item-content {
             flex: 1;
+            margin-bottom: 12px;
+        }
+        
+        @media (min-width: 768px) {
+            .list-item-content {
+                margin-bottom: 0;
+            }
         }
         
         .list-item-title {
             font-weight: 600;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            font-size: 15px;
+            word-break: break-word;
         }
         
         .list-item-meta {
-            font-size: 12px;
+            font-size: 13px;
             color: #888;
+            line-height: 1.5;
+        }
+        
+        .list-item-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         
         .badge {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 5px 10px;
+            border-radius: 10px;
             font-size: 12px;
             font-weight: 600;
             margin-left: 8px;
@@ -189,43 +273,56 @@
         }
         
         .message {
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 16px;
             margin-bottom: 20px;
             font-size: 14px;
         }
         
         .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #fee;
+            color: #c33;
+            border: 2px solid #fcc;
         }
         
         .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #efe;
+            color: #363;
+            border: 2px solid #cec;
         }
         
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        @media (min-width: 768px) {
+            .tabs {
+                margin-bottom: 20px;
+            }
         }
         
         .tab {
-            padding: 10px 20px;
-            background: #f8f9fa;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.9);
             border: none;
-            border-radius: 8px;
+            border-radius: 16px;
             cursor: pointer;
             font-weight: 600;
             color: #666;
+            font-size: 14px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
         }
         
         .tab.active {
-            background: var(--primary-color);
-            color: white;
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .tab-content {
@@ -238,13 +335,15 @@
         
         .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 40px 20px;
             color: #999;
+            font-size: 15px;
         }
         
         .flex {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
         
         .hidden {
@@ -256,18 +355,12 @@
             font-size: 14px;
         }
         
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
         .repo-controls {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: stretch;
         }
         
         .repo-controls input[type="text"] {
@@ -276,20 +369,41 @@
         }
         
         .repo-controls select {
-            width: auto;
-            min-width: 150px;
+            flex: 1;
+            min-width: 160px;
+        }
+        
+        @media (min-width: 768px) {
+            .repo-controls select {
+                flex: 0;
+                min-width: 180px;
+            }
         }
         
         .sort-toggle {
             background: #f8f9fa;
-            border: 2px solid #e0e0e0;
-            padding: 10px 16px;
-            border-radius: 8px;
+            border: 2px solid #e8e8e8;
+            padding: 14px 20px;
+            border-radius: 16px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
             color: #666;
-            transition: all 0.3s;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 140px;
+            text-align: center;
+        }
+        
+        @media (min-width: 768px) {
+            .sort-toggle {
+                flex: 0;
+                min-width: auto;
+            }
+        }
+        
+        .sort-toggle:active {
+            transform: scale(0.98);
         }
         
         .sort-toggle:hover {
@@ -300,6 +414,33 @@
             background: var(--primary-color);
             color: white;
             border-color: var(--primary-color);
+        }
+        
+        small {
+            font-size: 13px;
+        }
+        
+        .release-body {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+            padding: 12px;
+            background: white;
+            border-radius: 12px;
+        }
+        
+        @media (max-width: 767px) {
+            .main-header button {
+                width: 100%;
+                margin-top: 12px;
+            }
+            
+            input[type="checkbox"] {
+                width: 20px !important;
+                height: 20px;
+                margin-right: 10px !important;
+            }
         }
     </style>
 </head>
@@ -318,8 +459,8 @@
                 <label>Password</label>
                 <input type="password" id="loginPassword" placeholder="Enter password" onkeypress="handleLoginKeypress(event)">
             </div>
-            <button onclick="login()" style="width: 100%; margin-bottom: 10px;">Login</button>
-            <button id="createAccountBtn" onclick="showRegister()" class="secondary" style="width: 100%;">Create Account</button>
+            <button onclick="login()" style="margin-bottom: 10px;">Login</button>
+            <button id="createAccountBtn" onclick="showRegister()" class="secondary">Create Account</button>
         </div>
         
         <div id="registerForm" class="hidden">
@@ -331,15 +472,15 @@
                 <label>Password</label>
                 <input type="password" id="regPassword" placeholder="Choose password" onkeypress="handleRegisterKeypress(event)">
             </div>
-            <button onclick="register()" style="width: 100%; margin-bottom: 10px;">Register</button>
-            <button onclick="showLogin()" class="secondary" style="width: 100%;">Back to Login</button>
+            <button onclick="register()" style="margin-bottom: 10px;">Register</button>
+            <button onclick="showLogin()" class="secondary">Back to Login</button>
         </div>
     </div>
     
     <!-- Main App Container -->
     <div id="appContainer" class="container hidden">
         <div class="main-header">
-            <div>
+            <div class="header-content">
                 <h1>GitHub Release Monitor</h1>
                 <div class="user-info">
                     Logged in as: <strong id="currentUser"></strong>
@@ -415,7 +556,10 @@
                 <div id="adminMessage"></div>
                 <div class="form-group">
                     <label>Polling Interval (minutes)</label>
-                    <input type="number" id="pollingInterval" min="1" value="60">
+                    <input type="number" id="pollingInterval" min="1" step="1" value="60">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Must be a whole number (minimum 1 minute)
+                    </small>
                 </div>
                 <div class="flex">
                     <button onclick="updatePollingInterval()">Update Interval</button>
@@ -475,7 +619,6 @@
         let allRepositories = [];
         let sortAscending = false;
         
-        // Utility function to format dates in user's local timezone
         function formatLocalDateTime(isoString) {
             if (!isoString) return 'Never';
             const date = new Date(isoString);
@@ -489,9 +632,7 @@
             });
         }
         
-        // Check if already logged in
         window.onload = async () => {
-            // Check registration status
             await checkRegistrationStatus();
             
             try {
@@ -640,14 +781,12 @@
             const searchTerm = document.getElementById('repoSearch').value.toLowerCase();
             const sortBy = document.getElementById('sortBy').value;
             
-            // Filter repositories
             let filtered = allRepositories.filter(r => {
                 const fullName = `${r.repo_owner}/${r.repo_name}`.toLowerCase();
                 return fullName.includes(searchTerm) || 
                        (r.latest_release && r.latest_release.toLowerCase().includes(searchTerm));
             });
             
-            // Sort repositories
             filtered.sort((a, b) => {
                 let comparison = 0;
                 
@@ -656,7 +795,6 @@
                     const nameB = `${b.repo_owner}/${b.repo_name}`.toLowerCase();
                     comparison = nameA.localeCompare(nameB);
                 } else if (sortBy === 'release') {
-                    // Sort by release - repositories without releases go to end
                     if (!a.latest_release && !b.latest_release) comparison = 0;
                     else if (!a.latest_release) comparison = 1;
                     else if (!b.latest_release) comparison = -1;
@@ -664,7 +802,7 @@
                 } else if (sortBy === 'checked') {
                     const dateA = a.last_checked ? new Date(a.last_checked) : new Date(0);
                     const dateB = b.last_checked ? new Date(b.last_checked) : new Date(0);
-                    comparison = dateB - dateA; // Most recent first by default
+                    comparison = dateB - dateA;
                 }
                 
                 return sortAscending ? comparison : -comparison;
@@ -696,9 +834,11 @@
                             ${r.latest_release_url ? `<a href="${r.latest_release_url}" target="_blank" style="color: var(--primary-color);">View Latest Release</a> • ` : ''}
                             Last checked: ${formatLocalDateTime(r.last_checked)}
                         </div>
-                        ${r.latest_release_body ? `<div style="margin-top: 8px; font-size: 13px; color: #666; line-height: 1.4;">${escapeHtml(r.latest_release_body.substring(0, 200))}${r.latest_release_body.length > 200 ? '...' : ''}</div>` : ''}
+                        ${r.latest_release_body ? `<div class="release-body">${escapeHtml(r.latest_release_body.substring(0, 200))}${r.latest_release_body.length > 200 ? '...' : ''}</div>` : ''}
                     </div>
-                    <button class="danger small" onclick="deleteRepository(${r.id})">Delete</button>
+                    <div class="list-item-actions">
+                        <button class="danger small" onclick="deleteRepository(${r.id})">Delete</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -761,9 +901,9 @@
                 <div class="list-item">
                     <div class="list-item-content">
                         <div class="list-item-title">${e.name}</div>
-                        <div class="list-item-meta">${e.endpoint}</div>
+                        <div class="list-item-meta" style="word-break: break-all;">${e.endpoint}</div>
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div class="list-item-actions">
                         <button class="secondary small" onclick="testEndpoint(${e.id})">Test</button>
                         <button class="danger small" onclick="deleteEndpoint(${e.id})">Delete</button>
                     </div>
@@ -849,12 +989,13 @@
                                     Rate limit: ${t.rate_limit_remaining}/60 remaining
                                 </div>
                             </div>
-                            <button class="danger small" onclick="deleteToken(${t.id})">Delete</button>
+                            <div class="list-item-actions">
+                                <button class="danger small" onclick="deleteToken(${t.id})">Delete</button>
+                            </div>
                         </div>
                     `).join('');
                 }
                 
-                // Load users
                 await loadUsers();
             } catch (e) {
                 console.error('Error loading admin settings:', e);
@@ -901,11 +1042,11 @@
                                 ${u.is_admin ? '<span class="badge admin">Admin</span>' : ''}
                             </div>
                             <div class="list-item-meta">
-                                ${u.repo_count} repositories • ${u.endpoint_count} endpoints • 
+                                ${u.repo_count} repositories • ${u.endpoint_count} endpoints<br>
                                 Created: ${formatLocalDateTime(u.created_at)}
                             </div>
                         </div>
-                        <div style="display: flex; gap: 10px;">
+                        <div class="list-item-actions">
                             ${!u.is_admin ? `<button class="secondary small" onclick="makeAdmin(${u.id})">Make Admin</button>` : 
                               `<button class="secondary small" onclick="removeAdmin(${u.id})">Remove Admin</button>`}
                             <button class="secondary small" onclick="changePassword(${u.id}, '${u.username}')">Change Password</button>
@@ -1039,7 +1180,12 @@
         }
         
         async function updatePollingInterval() {
-            const interval = document.getElementById('pollingInterval').value;
+            const interval = parseInt(document.getElementById('pollingInterval').value);
+            
+            if (isNaN(interval) || interval < 1) {
+                showMessage('adminMessage', 'Polling interval must be at least 1 minute');
+                return;
+            }
             
             try {
                 const resp = await fetch('/api/admin/config', {
@@ -1051,7 +1197,8 @@
                 if (resp.ok) {
                     showMessage('adminMessage', 'Polling interval updated!', 'success');
                 } else {
-                    showMessage('adminMessage', 'Error updating interval');
+                    const data = await resp.json();
+                    showMessage('adminMessage', data.error || 'Error updating interval');
                 }
             } catch (e) {
                 showMessage('adminMessage', 'Connection error');
