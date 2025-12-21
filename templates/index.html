@@ -16,6 +16,11 @@
             --success-color: #28a745;
             --background-gradient-start: #091824;
             --background-gradient-end: #041524;
+            
+            /* Design Language: Slightly rounded squares */
+            --radius-container: 8px;
+            --radius-element: 6px;
+            --radius-small: 4px;
         }
 
         * {
@@ -48,7 +53,7 @@
             margin: 60px auto;
             background: white;
             padding: 32px 24px;
-            border-radius: 20px;
+            border-radius: var(--radius-container);
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
 
@@ -63,7 +68,7 @@
         .main-header {
             background: white;
             padding: 20px;
-            border-radius: 20px;
+            border-radius: var(--radius-container);
             margin-bottom: 16px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.1);
         }
@@ -118,7 +123,7 @@
         .card {
             background: white;
             padding: 20px;
-            border-radius: 20px;
+            border-radius: var(--radius-container);
             margin-bottom: 16px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
@@ -147,7 +152,7 @@
             width: 100%;
             padding: 14px 16px;
             border: 2px solid #e8e8e8;
-            border-radius: 16px;
+            border-radius: var(--radius-element);
             font-size: 15px;
             font-family: inherit;
             transition: all 0.2s;
@@ -165,7 +170,7 @@
             color: white;
             padding: 14px 24px;
             border: none;
-            border-radius: 16px;
+            border-radius: var(--radius-element);
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
@@ -214,7 +219,7 @@
         .list-item {
             background: #bad9f5;
             padding: 16px;
-            border-radius: 16px;
+            border-radius: var(--radius-element);
             margin-bottom: 12px;
         }
 
@@ -260,7 +265,7 @@
         .badge {
             display: inline-block;
             padding: 5px 10px;
-            border-radius: 10px;
+            border-radius: var(--radius-small);
             font-size: 12px;
             font-weight: 600;
             margin-left: 8px;
@@ -278,7 +283,7 @@
 
         .message {
             padding: 14px;
-            border-radius: 16px;
+            border-radius: var(--radius-element);
             margin-bottom: 20px;
             font-size: 14px;
         }
@@ -308,7 +313,7 @@
             z-index: 1010; /* Above sidebar to allow closing */
             background: white;
             border: none;
-            border-radius: 14px;
+            border-radius: var(--radius-element);
             width: 48px;
             height: 48px;
             cursor: pointer;
@@ -402,7 +407,7 @@
                 text-align: left;
                 padding: 16px 20px;
                 background: transparent;
-                border-radius: 12px;
+                border-radius: var(--radius-element);
                 color: #555;
                 font-size: 15px;
                 border: 1px solid transparent;
@@ -442,7 +447,7 @@
                 padding: 12px 20px;
                 background: rgba(255, 255, 255, 0.9);
                 border: none;
-                border-radius: 16px;
+                border-radius: var(--radius-element);
                 cursor: pointer;
                 font-weight: 600;
                 color: #666;
@@ -519,7 +524,7 @@
             background: #fafafa;
             border: 2px solid #e8e8e8;
             padding: 14px 20px;
-            border-radius: 16px;
+            border-radius: var(--radius-element);
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
@@ -562,7 +567,7 @@
             line-height: 1.5;
             padding: 12px;
             background: white;
-            border-radius: 12px;
+            border-radius: var(--radius-element);
         }
 
         @media (max-width: 767px) {
