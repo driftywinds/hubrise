@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Release Monitor</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+        :root {
+            /* Change these colors to customize the theme */
+            --primary-color: #4f90c2;
+            --primary-hover: #4277a1;
+            --secondary-color: #296da3;
+            --secondary-hover: #1e5078;
+            --danger-color: #dc3545;
+            --danger-hover: #c82333;
+            --success-color: #28a745;
+            --background-gradient-start: #091824;
+            --background-gradient-end: #041524;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .main-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        button {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: var(--primary-hover);
+        }
+        
+        button.secondary {
+            background: var(--secondary-color);
+        }
+        
+        button.secondary:hover {
+            background: var(--secondary-hover);
+        }
+        
+        button.danger {
+            background: var(--danger-color);
+        }
+        
+        button.danger:hover {
+            background: var(--danger-hover);
+        }
+        
+        button.small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .list-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .list-item-content {
+            flex: 1;
+        }
+        
+        .list-item-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .list-item-meta {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .badge.admin {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .badge.success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .flex {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .user-info {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Container -->
+    <div id="authContainer" class="auth-container">
+        <h2>GitHub Release Monitor</h2>
+        <div id="authMessage"></div>
+        
+        <div id="loginForm">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter username" onkeypress="handleLoginKeypress(event)">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" onkeypress="handleLoginKeypress(event)">
+            </div>
+            <button onclick="login()" style="width: 100%; margin-bottom: 10px;">Login</button>
+            <button id="createAccountBtn" onclick="showRegister()" class="secondary" style="width: 100%;">Create Account</button>
+        </div>
+        
+        <div id="registerForm" class="hidden">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="regUsername" placeholder="Choose username" onkeypress="handleRegisterKeypress(event)">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="regPassword" placeholder="Choose password" onkeypress="handleRegisterKeypress(event)">
+            </div>
+            <button onclick="register()" style="width: 100%; margin-bottom: 10px;">Register</button>
+            <button onclick="showLogin()" class="secondary" style="width: 100%;">Back to Login</button>
+        </div>
+    </div>
+    
+    <!-- Main App Container -->
+    <div id="appContainer" class="container hidden">
+        <div class="main-header">
+            <div>
+                <h1>GitHub Release Monitor</h1>
+                <div class="user-info">
+                    Logged in as: <strong id="currentUser"></strong>
+                </div>
+            </div>
+            <button onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('repositories')">My Repositories</button>
+            <button class="tab" onclick="switchTab('endpoints')">Notification Endpoints</button>
+            <button class="tab" id="adminTabButton" onclick="switchTab('admin')" style="display: none;">Admin Settings</button>
+        </div>
+        
+        <!-- Repositories Tab -->
+        <div id="repositoriesTab" class="tab-content active">
+            <div class="card">
+                <h3>Add Repository</h3>
+                <div id="repoMessage"></div>
+                <div class="form-group">
+                    <label>GitHub Repository URL</label>
+                    <input type="text" id="repoUrl" placeholder="https://github.com/owner/repo">
+                </div>
+                <button onclick="addRepository()">Add Repository</button>
+            </div>
+            
+            <div class="card">
+                <h3>Monitored Repositories</h3>
+                <div id="repositoriesList"></div>
+            </div>
+        </div>
+        
+        <!-- Endpoints Tab -->
+        <div id="endpointsTab" class="tab-content">
+            <div class="card">
+                <h3>Add Apprise Endpoint</h3>
+                <div id="endpointMessage"></div>
+                <div class="form-group">
+                    <label>Endpoint Name (Optional)</label>
+                    <input type="text" id="endpointName" placeholder="My Discord Webhook">
+                </div>
+                <div class="form-group">
+                    <label>Apprise URL</label>
+                    <input type="text" id="endpointUrl" placeholder="discord://webhook_id/webhook_token">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Examples: discord://..., slack://..., mailto://..., telegram://...
+                    </small>
+                </div>
+                <button onclick="addEndpoint()">Add Endpoint</button>
+            </div>
+            
+            <div class="card">
+                <h3>Configured Endpoints</h3>
+                <div id="endpointsList"></div>
+            </div>
+        </div>
+        
+        <!-- Admin Tab -->
+        <div id="adminTab" class="tab-content">
+            <div class="card">
+                <h3>Polling Configuration</h3>
+                <div id="adminMessage"></div>
+                <div class="form-group">
+                    <label>Polling Interval (minutes)</label>
+                    <input type="number" id="pollingInterval" min="1" value="60">
+                </div>
+                <div class="flex">
+                    <button onclick="updatePollingInterval()">Update Interval</button>
+                    <button onclick="pollNow()" class="secondary">Poll Now</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Registration Settings</h3>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="registrationsEnabled" onchange="updateRegistrationSettings()" style="width: auto; margin-right: 10px;">
+                        <span>Allow new user registrations</span>
+                    </label>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        When disabled, only admins can create new users
+                    </small>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>User Management</h3>
+                <div id="userManagementMessage"></div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="newUsername" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter password">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="newUserAdmin" style="width: auto; margin-right: 10px;">
+                        <span>Make this user an admin</span>
+                    </label>
+                </div>
+                <button onclick="createUser()">Create User</button>
+                <div id="usersList" style="margin-top: 20px;"></div>
+            </div>
+            
+            <div class="card">
+                <h3>GitHub Access Tokens</h3>
+                <div class="form-group">
+                    <label>Add Token</label>
+                    <input type="text" id="githubToken" placeholder="ghp_...">
+                </div>
+                <button onclick="addToken()">Add Token</button>
+                <div id="tokensList" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentUser = null;
+        let isAdmin = false;
+        
+        // Utility function to format dates in user's local timezone
+        function formatLocalDateTime(isoString) {
+            if (!isoString) return 'Never';
+            const date = new Date(isoString);
+            return date.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        // Check if already logged in
+        window.onload = async () => {
+            // Check registration status
+            await checkRegistrationStatus();
+            
+            try {
+                const resp = await fetch('/api/user');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    currentUser = data.username;
+                    isAdmin = data.is_admin;
+                    showApp();
+                }
+            } catch (e) {
+                // Not logged in
+            }
+        };
+        
+        async function checkRegistrationStatus() {
+            try {
+                const resp = await fetch('/api/config/registrations-enabled');
+                const data = await resp.json();
+                
+                const createBtn = document.getElementById('createAccountBtn');
+                if (!data.enabled) {
+                    createBtn.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Error checking registration status:', e);
+            }
+        }
+        
+        function showMessage(elementId, message, type = 'error') {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => el.innerHTML = '', 5000);
+        }
+        
+        function showLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+        }
+        
+        function showRegister() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+        }
+        
+        function handleLoginKeypress(event) {
+            if (event.key === 'Enter') {
+                login();
+            }
+        }
+        
+        function handleRegisterKeypress(event) {
+            if (event.key === 'Enter') {
+                register();
+            }
+        }
+        
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const resp = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    currentUser = data.username;
+                    isAdmin = data.is_admin;
+                    showApp();
+                } else {
+                    showMessage('authMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('authMessage', 'Connection error');
+            }
+        }
+        
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            
+            try {
+                const resp = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    showMessage('authMessage', 'Account created! Please login.', 'success');
+                    showLogin();
+                } else {
+                    showMessage('authMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('authMessage', 'Connection error');
+            }
+        }
+        
+        async function logout() {
+            await fetch('/api/logout', {method: 'POST'});
+            location.reload();
+        }
+        
+        function showApp() {
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            document.getElementById('currentUser').textContent = currentUser + (isAdmin ? ' (Admin)' : '');
+            
+            if (isAdmin) {
+                document.getElementById('adminTabButton').style.display = 'block';
+            }
+            
+            loadRepositories();
+            loadEndpoints();
+        }
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+            
+            if (tab === 'repositories') loadRepositories();
+            else if (tab === 'endpoints') loadEndpoints();
+            else if (tab === 'admin' && isAdmin) loadAdminSettings();
+        }
+        
+        async function loadRepositories() {
+            const resp = await fetch('/api/repositories');
+            const repos = await resp.json();
+            
+            const list = document.getElementById('repositoriesList');
+            
+            if (repos.length === 0) {
+                list.innerHTML = '<div class="empty-state">No repositories added yet</div>';
+                return;
+            }
+            
+            list.innerHTML = repos.map(r => `
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">
+                            ${r.repo_owner}/${r.repo_name}
+                            ${r.latest_release ? `<span class="badge success">${r.latest_release}</span>` : ''}
+                        </div>
+                        <div class="list-item-meta">
+                            ${r.latest_release_url ? `<a href="${r.latest_release_url}" target="_blank" style="color: var(--primary-color);">View Latest Release</a> • ` : ''}
+                            Last checked: ${formatLocalDateTime(r.last_checked)}
+                        </div>
+                        ${r.latest_release_body ? `<div style="margin-top: 8px; font-size: 13px; color: #666; line-height: 1.4;">${escapeHtml(r.latest_release_body.substring(0, 200))}${r.latest_release_body.length > 200 ? '...' : ''}</div>` : ''}
+                    </div>
+                    <button class="danger small" onclick="deleteRepository(${r.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        async function addRepository() {
+            const url = document.getElementById('repoUrl').value;
+            
+            try {
+                const resp = await fetch('/api/repositories', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({repo_url: url})
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    showMessage('repoMessage', 'Repository added successfully!', 'success');
+                    document.getElementById('repoUrl').value = '';
+                    loadRepositories();
+                } else {
+                    showMessage('repoMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('repoMessage', 'Error adding repository');
+            }
+        }
+        
+        async function deleteRepository(id) {
+            if (!confirm('Delete this repository?')) return;
+            
+            await fetch(`/api/repositories/${id}`, {method: 'DELETE'});
+            loadRepositories();
+        }
+        
+        async function loadEndpoints() {
+            const resp = await fetch('/api/apprise-endpoints');
+            const endpoints = await resp.json();
+            
+            const list = document.getElementById('endpointsList');
+            
+            if (endpoints.length === 0) {
+                list.innerHTML = '<div class="empty-state">No endpoints configured</div>';
+                return;
+            }
+            
+            list.innerHTML = endpoints.map(e => `
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">${e.name}</div>
+                        <div class="list-item-meta">${e.endpoint}</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="secondary small" onclick="testEndpoint(${e.id})">Test</button>
+                        <button class="danger small" onclick="deleteEndpoint(${e.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function testEndpoint(id) {
+            showMessage('endpointMessage', 'Sending test notification...', 'success');
+            
+            try {
+                const resp = await fetch(`/api/apprise-endpoints/${id}/test`, {
+                    method: 'POST'
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    showMessage('endpointMessage', data.message, 'success');
+                } else {
+                    showMessage('endpointMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('endpointMessage', 'Error testing endpoint');
+            }
+        }
+        
+        async function addEndpoint() {
+            const name = document.getElementById('endpointName').value;
+            const endpoint = document.getElementById('endpointUrl').value;
+            
+            try {
+                const resp = await fetch('/api/apprise-endpoints', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, endpoint})
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    showMessage('endpointMessage', 'Endpoint added successfully!', 'success');
+                    document.getElementById('endpointName').value = '';
+                    document.getElementById('endpointUrl').value = '';
+                    loadEndpoints();
+                } else {
+                    showMessage('endpointMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('endpointMessage', 'Error adding endpoint');
+            }
+        }
+        
+        async function deleteEndpoint(id) {
+            if (!confirm('Delete this endpoint?')) return;
+            
+            await fetch(`/api/apprise-endpoints/${id}`, {method: 'DELETE'});
+            loadEndpoints();
+        }
+        
+        async function loadAdminSettings() {
+            try {
+                const resp = await fetch('/api/admin/config');
+                if (!resp.ok) {
+                    console.error('Failed to load admin config');
+                    return;
+                }
+                
+                const config = await resp.json();
+                
+                document.getElementById('pollingInterval').value = config.polling_interval;
+                document.getElementById('registrationsEnabled').checked = config.registrations_enabled;
+                
+                const tokensList = document.getElementById('tokensList');
+                if (config.tokens.length === 0) {
+                    tokensList.innerHTML = '<div class="empty-state">No tokens configured</div>';
+                } else {
+                    tokensList.innerHTML = config.tokens.map(t => `
+                        <div class="list-item">
+                            <div class="list-item-content">
+                                <div class="list-item-title">${t.token}</div>
+                                <div class="list-item-meta">
+                                    Rate limit: ${t.rate_limit_remaining}/60 remaining
+                                </div>
+                            </div>
+                            <button class="danger small" onclick="deleteToken(${t.id})">Delete</button>
+                        </div>
+                    `).join('');
+                }
+                
+                // Load users
+                await loadUsers();
+            } catch (e) {
+                console.error('Error loading admin settings:', e);
+                showMessage('adminMessage', 'Error loading admin settings');
+            }
+        }
+        
+        async function updateRegistrationSettings() {
+            const enabled = document.getElementById('registrationsEnabled').checked;
+            
+            try {
+                const resp = await fetch('/api/admin/config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({registrations_enabled: enabled})
+                });
+                
+                if (resp.ok) {
+                    showMessage('adminMessage', 'Registration settings updated!', 'success');
+                } else {
+                    showMessage('adminMessage', 'Error updating settings');
+                }
+            } catch (e) {
+                showMessage('adminMessage', 'Connection error');
+            }
+        }
+        
+        async function loadUsers() {
+            try {
+                const resp = await fetch('/api/admin/users');
+                const users = await resp.json();
+                
+                const usersList = document.getElementById('usersList');
+                if (users.length === 0) {
+                    usersList.innerHTML = '<div class="empty-state">No users</div>';
+                    return;
+                }
+                
+                usersList.innerHTML = users.map(u => `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">
+                                ${u.username}
+                                ${u.is_admin ? '<span class="badge admin">Admin</span>' : ''}
+                            </div>
+                            <div class="list-item-meta">
+                                ${u.repo_count} repositories • ${u.endpoint_count} endpoints • 
+                                Created: ${formatLocalDateTime(u.created_at)}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            ${!u.is_admin ? `<button class="secondary small" onclick="makeAdmin(${u.id})">Make Admin</button>` : 
+                              `<button class="secondary small" onclick="removeAdmin(${u.id})">Remove Admin</button>`}
+                            <button class="secondary small" onclick="changePassword(${u.id}, '${u.username}')">Change Password</button>
+                            <button class="danger small" onclick="deleteUser(${u.id}, '${u.username}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading users:', e);
+            }
+        }
+        
+        async function createUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const is_admin = document.getElementById('newUserAdmin').checked;
+            
+            if (!username || !password) {
+                showMessage('userManagementMessage', 'Username and password required');
+                return;
+            }
+            
+            try {
+                const resp = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password, is_admin})
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    showMessage('userManagementMessage', 'User created successfully!', 'success');
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('newUserAdmin').checked = false;
+                    loadUsers();
+                } else {
+                    showMessage('userManagementMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('userManagementMessage', 'Error creating user');
+            }
+        }
+        
+        async function makeAdmin(userId) {
+            if (!confirm('Make this user an admin?')) return;
+            
+            try {
+                const resp = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({is_admin: true})
+                });
+                
+                if (resp.ok) {
+                    showMessage('userManagementMessage', 'User promoted to admin!', 'success');
+                    loadUsers();
+                } else {
+                    const data = await resp.json();
+                    showMessage('userManagementMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('userManagementMessage', 'Error updating user');
+            }
+        }
+        
+        async function removeAdmin(userId) {
+            if (!confirm('Remove admin privileges from this user?')) return;
+            
+            try {
+                const resp = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({is_admin: false})
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    showMessage('userManagementMessage', 'Admin privileges removed!', 'success');
+                    loadUsers();
+                } else {
+                    showMessage('userManagementMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('userManagementMessage', 'Error updating user');
+            }
+        }
+        
+        async function changePassword(userId, username) {
+            const newPassword = prompt(`Enter new password for ${username}:`);
+            if (!newPassword) return;
+            
+            try {
+                const resp = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({password: newPassword})
+                });
+                
+                if (resp.ok) {
+                    showMessage('userManagementMessage', 'Password changed successfully!', 'success');
+                } else {
+                    showMessage('userManagementMessage', 'Error changing password');
+                }
+            } catch (e) {
+                showMessage('userManagementMessage', 'Error changing password');
+            }
+        }
+        
+        async function deleteUser(userId, username) {
+            if (!confirm(`Delete user "${username}"? This will also delete all their repositories and endpoints.`)) return;
+            
+            try {
+                const resp = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    showMessage('userManagementMessage', 'User deleted successfully!', 'success');
+                    loadUsers();
+                } else {
+                    showMessage('userManagementMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('userManagementMessage', 'Error deleting user');
+            }
+        }
+        
+        async function updatePollingInterval() {
+            const interval = document.getElementById('pollingInterval').value;
+            
+            try {
+                const resp = await fetch('/api/admin/config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({polling_interval: interval})
+                });
+                
+                if (resp.ok) {
+                    showMessage('adminMessage', 'Polling interval updated!', 'success');
+                } else {
+                    showMessage('adminMessage', 'Error updating interval');
+                }
+            } catch (e) {
+                showMessage('adminMessage', 'Connection error');
+            }
+        }
+        
+        async function addToken() {
+            const token = document.getElementById('githubToken').value;
+            
+            try {
+                const resp = await fetch('/api/admin/tokens', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({token})
+                });
+                
+                if (resp.ok) {
+                    showMessage('adminMessage', 'Token added successfully!', 'success');
+                    document.getElementById('githubToken').value = '';
+                    loadAdminSettings();
+                } else {
+                    showMessage('adminMessage', 'Error adding token');
+                }
+            } catch (e) {
+                showMessage('adminMessage', 'Connection error');
+            }
+        }
+        
+        async function deleteToken(id) {
+            if (!confirm('Delete this token?')) return;
+            
+            await fetch('/api/admin/tokens', {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id})
+            });
+            loadAdminSettings();
+        }
+        
+        async function pollNow() {
+            showMessage('adminMessage', 'Polling all repositories now...', 'success');
+            
+            try {
+                const resp = await fetch('/api/admin/poll-now', {
+                    method: 'POST'
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok) {
+                    showMessage('adminMessage', data.message + ' Check the repositories tab for updates.', 'success');
+                    // Reload repositories to show updated times
+                    setTimeout(() => {
+                        if (document.getElementById('repositoriesTab').classList.contains('active')) {
+                            loadRepositories();
+                        }
+                    }, 1000);
+                } else {
+                    showMessage('adminMessage', data.error);
+                }
+            } catch (e) {
+                showMessage('adminMessage', 'Error triggering poll');
+            }
+        }
+    </script>
+</body>
+</html>
