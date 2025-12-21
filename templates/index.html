@@ -218,7 +218,7 @@
             .list-item {
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
+                align-items: flex-start;
             }
         }
         
@@ -305,6 +305,117 @@
             }
         }
         
+		.mobile-menu-toggle {
+			display: block;
+			position: fixed;
+			top: 20px;
+			left: 20px;
+			z-index: 1000;
+			background: white;
+			border: none;
+			border-radius: 12px;
+			padding: 12px;
+			cursor: pointer;
+			box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+		}
+
+		@media (min-width: 768px) {
+			.mobile-menu-toggle {
+				display: none;
+			}
+		}
+
+		.hamburger-icon {
+			width: 24px;
+			height: 20px;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+		}
+
+		.hamburger-icon span {
+			width: 100%;
+			height: 3px;
+			background: #333;
+			border-radius: 2px;
+			transition: all 0.3s;
+		}
+
+		.mobile-menu-overlay {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(0,0,0,0.5);
+			z-index: 999;
+		}
+
+		.mobile-menu-overlay.active {
+			display: block;
+		}
+
+		.tabs {
+			display: flex;
+			gap: 8px;
+			margin-bottom: 16px;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		@media (max-width: 767px) {
+			.tabs {
+				position: fixed;
+				top: 0;
+				left: -280px;
+				width: 280px;
+				height: 100vh;
+				background: white;
+				flex-direction: column;
+				margin: 0;
+				padding: 80px 20px 20px 20px;
+				box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+				z-index: 1000;
+				transition: left 0.3s ease;
+				overflow-y: auto;
+			}
+    
+			.tabs.active {
+				left: 0;
+			}
+		}
+
+		@media (min-width: 768px) {
+			.tabs {
+				margin-bottom: 20px;
+			}
+		}
+
+		.tab {
+			padding: 12px 20px;
+			background: rgba(255, 255, 255, 0.9);
+			border: none;
+			border-radius: 16px;
+			cursor: pointer;
+			font-weight: 600;
+			color: #666;
+			font-size: 14px;
+			white-space: nowrap;
+			flex-shrink: 0;
+			transition: all 0.2s;
+		}
+
+		@media (max-width: 767px) {
+			.tab {
+				width: 100%;
+				text-align: left;
+				background: #f8f9fa;
+				padding: 16px 20px;
+				white-space: normal;
+			}
+		}
+		
         .tab {
             padding: 12px 20px;
             background: rgba(255, 255, 255, 0.9);
@@ -479,7 +590,16 @@
     
     <!-- Main App Container -->
     <div id="appContainer" class="container hidden">
-        <div class="main-header">
+		<button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+			<div class="hamburger-icon">
+				<span></span>
+				<span></span>
+				<span></span>
+			</div>
+		</button>
+		<div class="mobile-menu-overlay" onclick="closeMobileMenu()"></div>
+	
+		<div class="main-header">
             <div class="header-content">
                 <h1>GitHub Release Monitor</h1>
                 <div class="user-info">
@@ -1262,6 +1382,30 @@
                 showMessage('adminMessage', 'Error triggering poll');
             }
         }
+		
+		function toggleMobileMenu() {
+			const tabs = document.querySelector('.tabs');
+			const overlay = document.querySelector('.mobile-menu-overlay');
+			tabs.classList.toggle('active');
+			overlay.classList.toggle('active');
+		}
+
+		function closeMobileMenu() {
+			const tabs = document.querySelector('.tabs');
+			const overlay = document.querySelector('.mobile-menu-overlay');
+			tabs.classList.remove('active');
+			overlay.classList.remove('active');
+		}
+
+		// Close menu when a tab is clicked on mobile
+		document.addEventListener('DOMContentLoaded', function() {
+			if (window.innerWidth < 768) {
+				document.querySelectorAll('.tab').forEach(tab => {
+					tab.addEventListener('click', closeMobileMenu);
+				});
+			}
+		});
+		
     </script>
 </body>
 </html>
