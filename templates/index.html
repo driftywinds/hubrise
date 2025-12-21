@@ -93,7 +93,7 @@
             font-weight: 500;
         }
         
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -102,7 +102,7 @@
             transition: border 0.3s;
         }
         
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
         }
@@ -261,6 +261,46 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
         }
+        
+        .repo-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .repo-controls input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .repo-controls select {
+            width: auto;
+            min-width: 150px;
+        }
+        
+        .sort-toggle {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .sort-toggle:hover {
+            background: #e9ecef;
+        }
+        
+        .sort-toggle.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -328,6 +368,17 @@
             
             <div class="card">
                 <h3>Monitored Repositories</h3>
+                <div class="repo-controls">
+                    <input type="text" id="repoSearch" placeholder="Search repositories..." oninput="filterAndSortRepositories()">
+                    <select id="sortBy" onchange="filterAndSortRepositories()">
+                        <option value="name">Sort by Name</option>
+                        <option value="release">Sort by Latest Release</option>
+                        <option value="checked">Sort by Last Checked</option>
+                    </select>
+                    <button class="sort-toggle" id="sortOrderToggle" onclick="toggleSortOrder()">
+                        ↓ Descending
+                    </button>
+                </div>
                 <div id="repositoriesList"></div>
             </div>
         </div>
@@ -421,6 +472,8 @@
     <script>
         let currentUser = null;
         let isAdmin = false;
+        let allRepositories = [];
+        let sortAscending = false;
         
         // Utility function to format dates in user's local timezone
         function formatLocalDateTime(isoString) {
@@ -575,14 +628,60 @@
             else if (tab === 'admin' && isAdmin) loadAdminSettings();
         }
         
-        async function loadRepositories() {
-            const resp = await fetch('/api/repositories');
-            const repos = await resp.json();
+        function toggleSortOrder() {
+            sortAscending = !sortAscending;
+            const toggle = document.getElementById('sortOrderToggle');
+            toggle.textContent = sortAscending ? '↑ Ascending' : '↓ Descending';
+            toggle.classList.toggle('active', sortAscending);
+            filterAndSortRepositories();
+        }
+        
+        function filterAndSortRepositories() {
+            const searchTerm = document.getElementById('repoSearch').value.toLowerCase();
+            const sortBy = document.getElementById('sortBy').value;
             
+            // Filter repositories
+            let filtered = allRepositories.filter(r => {
+                const fullName = `${r.repo_owner}/${r.repo_name}`.toLowerCase();
+                return fullName.includes(searchTerm) || 
+                       (r.latest_release && r.latest_release.toLowerCase().includes(searchTerm));
+            });
+            
+            // Sort repositories
+            filtered.sort((a, b) => {
+                let comparison = 0;
+                
+                if (sortBy === 'name') {
+                    const nameA = `${a.repo_owner}/${a.repo_name}`.toLowerCase();
+                    const nameB = `${b.repo_owner}/${b.repo_name}`.toLowerCase();
+                    comparison = nameA.localeCompare(nameB);
+                } else if (sortBy === 'release') {
+                    // Sort by release - repositories without releases go to end
+                    if (!a.latest_release && !b.latest_release) comparison = 0;
+                    else if (!a.latest_release) comparison = 1;
+                    else if (!b.latest_release) comparison = -1;
+                    else comparison = a.latest_release.localeCompare(b.latest_release);
+                } else if (sortBy === 'checked') {
+                    const dateA = a.last_checked ? new Date(a.last_checked) : new Date(0);
+                    const dateB = b.last_checked ? new Date(b.last_checked) : new Date(0);
+                    comparison = dateB - dateA; // Most recent first by default
+                }
+                
+                return sortAscending ? comparison : -comparison;
+            });
+            
+            displayRepositories(filtered);
+        }
+        
+        function displayRepositories(repos) {
             const list = document.getElementById('repositoriesList');
             
             if (repos.length === 0) {
-                list.innerHTML = '<div class="empty-state">No repositories added yet</div>';
+                if (allRepositories.length === 0) {
+                    list.innerHTML = '<div class="empty-state">No repositories added yet</div>';
+                } else {
+                    list.innerHTML = '<div class="empty-state">No repositories match your search</div>';
+                }
                 return;
             }
             
@@ -602,6 +701,12 @@
                     <button class="danger small" onclick="deleteRepository(${r.id})">Delete</button>
                 </div>
             `).join('');
+        }
+        
+        async function loadRepositories() {
+            const resp = await fetch('/api/repositories');
+            allRepositories = await resp.json();
+            filterAndSortRepositories();
         }
         
         function escapeHtml(text) {
@@ -998,7 +1103,6 @@
                 
                 if (resp.ok) {
                     showMessage('adminMessage', data.message + ' Check the repositories tab for updates.', 'success');
-                    // Reload repositories to show updated times
                     setTimeout(() => {
                         if (document.getElementById('repositoriesTab').classList.contains('active')) {
                             loadRepositories();
