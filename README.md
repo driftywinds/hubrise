@@ -12,7 +12,7 @@ Also available on Docker Hub - [```driftywinds/hubrise:latest```](https://hub.do
 
 1. Download the ```compose.yml``` file from the repo [here](https://github.com/driftywinds/hubrise).
 2. Run ```docker compose up -d```.
-3. Setup the first user (which is admin  by default) here `https://localhost:3035` and get started.
+3. Setup the first user (which has admin privileges by default) here `https://localhost:3035` and get started.
 
 <br>
 
