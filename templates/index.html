@@ -27,970 +27,552 @@
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%);
+            color: #e0e0e0;
             min-height: 100vh;
-            padding: 12px;
         }
-        
-        @media (min-width: 768px) {
-            body {
-                padding: 20px;
-            }
-        }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-        }
-        
-        .auth-container {
-            max-width: 420px;
-            margin: 60px auto;
-            background: white;
-            padding: 32px 24px;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-        
-        @media (min-width: 768px) {
-            .auth-container {
-                margin: 100px auto;
-                padding: 40px;
-            }
-        }
-        
-        .main-header {
-            background: white;
             padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
         }
-        
-        @media (min-width: 768px) {
-            .main-header {
-                padding: 24px 28px;
-                margin-bottom: 24px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-        }
-        
-        .header-content {
-            margin-bottom: 16px;
-        }
-        
-        @media (min-width: 768px) {
-            .header-content {
-                margin-bottom: 0;
-            }
-        }
-        
+
         h1 {
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 28px;
-            }
-        }
-        
-        h2 {
+            text-align: center;
+            margin-bottom: 30px;
             color: var(--primary-color);
-            margin-bottom: 24px;
-            font-size: 22px;
-            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
-        
-        h3 {
-            color: #333;
-            margin-bottom: 16px;
-            font-size: 18px;
-            font-weight: 600;
+
+        /* --- NAVIGATION TABS (DESKTOP DEFAULT) --- */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        
-        @media (min-width: 768px) {
-            .card {
-                padding: 28px;
-                margin-bottom: 20px;
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        /* --- MOBILE MENU ELEMENTS (Hidden on Desktop) --- */
+        .mobile-menu-btn {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 2001;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1999;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .mobile-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* --- MOBILE RESPONSIVE SIDEBAR --- */
+        @media (max-width: 768px) {
+            h1 {
+                margin-top: 40px; /* Space for hamburger */
+                font-size: 1.8rem;
+            }
+
+            .mobile-menu-btn {
+                display: block; /* Show hamburger */
+            }
+
+            .tabs {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 260px;
+                background: #0b1621; /* Solid dark background */
+                flex-direction: column;
+                justify-content: flex-start;
+                padding-top: 80px; /* Push items down */
+                margin: 0;
+                gap: 0;
+                z-index: 2000;
+                transform: translateX(-100%); /* Hide off-screen */
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+                border-right: 1px solid rgba(255,255,255,0.1);
+            }
+
+            .tabs.active {
+                transform: translateX(0); /* Slide in */
+            }
+
+            .tab {
+                width: 100%;
+                border-radius: 0;
+                border: none;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                text-align: left;
+                padding: 15px 25px;
+                background: transparent;
+                font-size: 1.1rem;
+            }
+
+            .tab:hover {
+                background: rgba(255,255,255,0.05);
+            }
+
+            .tab.active {
+                background: rgba(79, 144, 194, 0.15); /* Subtle highlight */
+                border-left: 4px solid var(--primary-color);
+                border-color: transparent; /* Reset border */
+            }
+
+            /* Handle the Logout button specifically on mobile if present */
+            .tab[onclick="logout()"] {
+                margin-left: 0 !important;
+                margin-top: auto; /* Push to bottom */
+                background: rgba(220, 53, 69, 0.1) !important;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                color: var(--danger-color);
             }
         }
-        
-        .form-group {
-            margin-bottom: 20px;
+
+        /* --- CONTENT STYLES (UNCHANGED) --- */
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
         label {
             display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-            font-size: 14px;
+            margin-bottom: 5px;
+            color: #aaa;
         }
-        
-        input, textarea, select {
+
+        input {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e8e8e8;
-            border-radius: 16px;
-            font-size: 15px;
-            font-family: system-ui, -apple-system, sans-serif;
-            transition: all 0.2s;
-            background: #fafafa;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: white;
+            margin-bottom: 10px;
         }
-        
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            background: white;
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
         }
-        
-        button {
+
+        .btn-primary {
             background: var(--primary-color);
             color: white;
-            padding: 14px 24px;
-            border: none;
-            border-radius: 16px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: system-ui, -apple-system, sans-serif;
-            width: 100%;
         }
-        
-        @media (min-width: 768px) {
-            button {
-                width: auto;
-            }
-        }
-        
-        button:active {
-            transform: scale(0.98);
-        }
-        
-        button:hover {
+
+        .btn-primary:hover {
             background: var(--primary-hover);
         }
-        
-        button.secondary {
-            background: var(--secondary-color);
-        }
-        
-        button.secondary:hover {
-            background: var(--secondary-hover);
-        }
-        
-        button.danger {
+
+        .btn-danger {
             background: var(--danger-color);
+            color: white;
         }
-        
-        button.danger:hover {
+
+        .btn-danger:hover {
             background: var(--danger-hover);
         }
         
-        button.small {
-            padding: 10px 16px;
-            font-size: 13px;
-            width: auto;
-        }
-        
-        .list-item {
-            background: #bad9f5;
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 12px;
-        }
-        
-        @media (min-width: 768px) {
-            .list-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-            }
-        }
-        
-        .list-item-content {
-            flex: 1;
-            margin-bottom: 12px;
-        }
-        
-        @media (min-width: 768px) {
-            .list-item-content {
-                margin-bottom: 0;
-            }
-        }
-        
-        .list-item-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 6px;
-            font-size: 15px;
-            word-break: break-word;
-        }
-        
-        .list-item-meta {
-            font-size: 13px;
-            color: #888;
-            line-height: 1.5;
-        }
-        
-        .list-item-actions {
+        .repo-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
-        .badge.admin {
-            background: #ffc107;
-            color: #000;
-        }
-        
-        .badge.success {
-            background: var(--success-color);
-            color: white;
-        }
-        
-        .message {
-            padding: 14px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        .message.error {
-            background: #fee;
-            color: #c33;
-            border: 2px solid #fcc;
-        }
-        
-        .message.success {
-            background: #efe;
-            color: #363;
-            border: 2px solid #cec;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        @media (min-width: 768px) {
-            .tabs {
-                margin-bottom: 20px;
-            }
-        }
-        
-		.mobile-menu-toggle {
-			display: block;
-			position: fixed;
-			top: 20px;
-			left: 20px;
-			z-index: 1000;
-			background: white;
-			border: none;
-			border-radius: 12px;
-			padding: 12px;
-			cursor: pointer;
-			box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-		}
 
-		@media (min-width: 768px) {
-			.mobile-menu-toggle {
-				display: none;
-			}
-		}
-
-		.hamburger-icon {
-			width: 24px;
-			height: 20px;
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-		}
-
-		.hamburger-icon span {
-			width: 100%;
-			height: 3px;
-			background: #333;
-			border-radius: 2px;
-			transition: all 0.3s;
-		}
-
-		.mobile-menu-overlay {
-			display: none;
-			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background: rgba(0,0,0,0.5);
-			z-index: 999;
-		}
-
-		.mobile-menu-overlay.active {
-			display: block;
-		}
-
-		.tabs {
-			display: flex;
-			gap: 8px;
-			margin-bottom: 16px;
-			overflow-x: auto;
-			-webkit-overflow-scrolling: touch;
-		}
-
-		@media (max-width: 767px) {
-			.tabs {
-				position: fixed;
-				top: 0;
-				left: -280px;
-				width: 280px;
-				height: 100vh;
-				background: white;
-				flex-direction: column;
-				margin: 0;
-				padding: 80px 20px 20px 20px;
-				box-shadow: 2px 0 12px rgba(0,0,0,0.15);
-				z-index: 1000;
-				transition: left 0.3s ease;
-				overflow-y: auto;
-			}
-    
-			.tabs.active {
-				left: 0;
-			}
-		}
-
-		@media (min-width: 768px) {
-			.tabs {
-				margin-bottom: 20px;
-			}
-		}
-
-		.tab {
-			padding: 12px 20px;
-			background: rgba(255, 255, 255, 0.9);
-			border: none;
-			border-radius: 16px;
-			cursor: pointer;
-			font-weight: 600;
-			color: #666;
-			font-size: 14px;
-			white-space: nowrap;
-			flex-shrink: 0;
-			transition: all 0.2s;
-		}
-
-		@media (max-width: 767px) {
-			.tab {
-				width: 100%;
-				text-align: left;
-				background: #f8f9fa;
-				padding: 16px 20px;
-				white-space: normal;
-			}
-		}
-		
-        .tab {
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #666;
-            font-size: 14px;
-            white-space: nowrap;
-            flex-shrink: 0;
-            transition: all 0.2s;
-        }
-        
-        .tab.active {
-            background: white;
+        .repo-info h3 {
             color: var(--primary-color);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 5px;
         }
-        
-        .tab-content {
-            display: none;
+
+        .repo-info p {
+            font-size: 0.9em;
+            color: #aaa;
         }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-            font-size: 15px;
-        }
-        
-        .flex {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .user-info {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .repo-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: stretch;
-        }
-        
-        .repo-controls input[type="text"] {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .repo-controls select {
-            flex: 1;
-            min-width: 160px;
-        }
-        
-        @media (min-width: 768px) {
-            .repo-controls select {
-                flex: 0;
-                min-width: 180px;
-            }
-        }
-        
-        .sort-toggle {
-            background: #fafafa;
-            border: 2px solid #e8e8e8;
-            padding: 14px 20px;
-            border-radius: 16px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.2s;
-            flex: 1;
-            min-width: 140px;
-            text-align: center;
-        }
-        
-        @media (min-width: 768px) {
-            .sort-toggle {
-                flex: 0;
-                min-width: auto;
-            }
-        }
-        
-        .sort-toggle:active {
-            transform: scale(0.98);
-        }
-        
-        .sort-toggle:hover {
-            background: #e9ecef;
-        }
-        
-        .sort-toggle.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        
-        small {
-            font-size: 13px;
-        }
-        
-        .release-body {
+
+        .release-notes {
             margin-top: 10px;
-            font-size: 13px;
-            color: #666;
-            line-height: 1.5;
-            padding: 12px;
-            background: white;
-            border-radius: 12px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
         }
-        
-        @media (max-width: 767px) {
-            .main-header button {
-                width: 100%;
-                margin-top: 12px;
-            }
-            
-            input[type="checkbox"] {
-                width: 20px !important;
-                height: 20px;
-                margin-right: 10px !important;
-            }
+
+        .message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid var(--success-color);
+            color: #d4edda;
+        }
+
+        .message.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid var(--danger-color);
+            color: #f8d7da;
+        }
+
+        .endpoint-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
 <body>
-    <!-- Auth Container -->
-    <div id="authContainer" class="auth-container">
-        <h2>GitHub Release Monitor</h2>
-        <div id="authMessage"></div>
-        
-        <div id="loginForm">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="loginUsername" placeholder="Enter username" onkeypress="handleLoginKeypress(event)">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter password" onkeypress="handleLoginKeypress(event)">
-            </div>
-            <button onclick="login()" style="margin-bottom: 10px;">Login</button>
-            <button id="createAccountBtn" onclick="showRegister()" class="secondary">Create Account</button>
-        </div>
-        
-        <div id="registerForm" class="hidden">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="regUsername" placeholder="Choose username" onkeypress="handleRegisterKeypress(event)">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="regPassword" placeholder="Choose password" onkeypress="handleRegisterKeypress(event)">
-            </div>
-            <button onclick="register()" style="margin-bottom: 10px;">Register</button>
-            <button onclick="showLogin()" class="secondary">Back to Login</button>
-        </div>
-    </div>
-    
-    <!-- Main App Container -->
-    <div id="appContainer" class="container hidden">
-		<button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
-			<div class="hamburger-icon">
-				<span></span>
-				<span></span>
-				<span></span>
-			</div>
-		</button>
-		<div class="mobile-menu-overlay" onclick="closeMobileMenu()"></div>
-	
-		<div class="main-header">
-            <div class="header-content">
-                <h1>GitHub Release Monitor</h1>
-                <div class="user-info">
-                    Logged in as: <strong id="currentUser"></strong>
-                </div>
-            </div>
-            <button onclick="logout()">Logout</button>
-        </div>
+    <div class="mobile-overlay" onclick="closeMobileMenu()"></div>
+
+    <div class="container">
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+
+        <h1>GitHub Release Monitor</h1>
         
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('repositories')">My Repositories</button>
-            <button class="tab" onclick="switchTab('endpoints')">Notification Endpoints</button>
-            <button class="tab" id="adminTabButton" onclick="switchTab('admin')" style="display: none;">Admin Settings</button>
+            <div class="tab active" id="repositoriesTab" onclick="switchTab('repositories')">My Repositories</div>
+            <div class="tab" id="endpointsTab" onclick="switchTab('endpoints')">Notification Endpoints</div>
+            <div class="tab" id="settingsTab" onclick="switchTab('settings')">Admin Settings</div>
+            {% if session.get('user_id') %}
+            <div class="tab" onclick="logout()" style="margin-left: auto; background: var(--danger-color); border-color: var(--danger-color);">Logout</div>
+            {% endif %}
         </div>
-        
-        <!-- Repositories Tab -->
-        <div id="repositoriesTab" class="tab-content active">
+
+        <div id="repositories" class="tab-content active">
             <div class="card">
-                <h3>Add Repository</h3>
-                <div id="repoMessage"></div>
                 <div class="form-group">
-                    <label>GitHub Repository URL</label>
-                    <input type="text" id="repoUrl" placeholder="https://github.com/owner/repo">
+                    <label>Add Repository URL</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="repoUrl" placeholder="https://github.com/username/repository">
+                        <button class="btn btn-primary" onclick="addRepository()">Add</button>
+                    </div>
                 </div>
-                <button onclick="addRepository()">Add Repository</button>
-            </div>
-            
-            <div class="card">
-                <h3>Monitored Repositories</h3>
-                <div class="repo-controls">
-                    <input type="text" id="repoSearch" placeholder="Search repositories..." oninput="filterAndSortRepositories()">
-                    <select id="sortBy" onchange="filterAndSortRepositories()">
-                        <option value="name">Sort by Name</option>
-                        <option value="release">Sort by Latest Release</option>
-                        <option value="checked">Sort by Last Checked</option>
-                    </select>
-                    <button class="sort-toggle" id="sortOrderToggle" onclick="toggleSortOrder()">
-                        ↓ Descending
-                    </button>
-                </div>
-                <div id="repositoriesList"></div>
+                <div id="repoMessage" class="message"></div>
+                <div id="repoList" style="margin-top: 20px;">
+                    </div>
             </div>
         </div>
-        
-        <!-- Endpoints Tab -->
-        <div id="endpointsTab" class="tab-content">
+
+        <div id="endpoints" class="tab-content">
             <div class="card">
-                <h3>Add Apprise Endpoint</h3>
-                <div id="endpointMessage"></div>
+                <h2>Notification Endpoints (Apprise)</h2>
+                <p style="margin-bottom: 15px; font-size: 0.9em; color: #aaa;">
+                    Enter Apprise-compatible URLs (e.g., discord://webhook_id/token, tgram://bot_token/chat_id)
+                </p>
                 <div class="form-group">
-                    <label>Endpoint Name (Optional)</label>
-                    <input type="text" id="endpointName" placeholder="My Discord Webhook">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="endpointUrl" placeholder="Enter Apprise URL">
+                        <button class="btn btn-primary" onclick="addEndpoint()">Add</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Apprise URL</label>
-                    <input type="text" id="endpointUrl" placeholder="discord://webhook_id/webhook_token">
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        Examples: discord://..., slack://..., mailto://..., telegram://...
-                    </small>
-                </div>
-                <button onclick="addEndpoint()">Add Endpoint</button>
-            </div>
-            
-            <div class="card">
-                <h3>Configured Endpoints</h3>
-                <div id="endpointsList"></div>
+                <div id="endpointMessage" class="message"></div>
+                <div id="endpointList" style="margin-top: 20px;">
+                    </div>
             </div>
         </div>
-        
-        <!-- Admin Tab -->
-        <div id="adminTab" class="tab-content">
+
+        <div id="settings" class="tab-content">
             <div class="card">
-                <h3>Polling Configuration</h3>
-                <div id="adminMessage"></div>
-                <div class="form-group">
+                <h2>Admin Settings</h2>
+                <div id="adminMessage" class="message"></div>
+                
+                <div class="form-group" style="margin-top: 20px;">
                     <label>Polling Interval (minutes)</label>
-                    <input type="number" id="pollingInterval" min="1" step="1" value="60">
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        Must be a whole number (minimum 1 minute)
-                    </small>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="pollingInterval" min="5" placeholder="60">
+                        <button class="btn btn-primary" onclick="updateConfig()">Save</button>
+                    </div>
                 </div>
-                <div class="flex">
-                    <button onclick="updatePollingInterval()">Update Interval</button>
-                    <button onclick="pollNow()" class="secondary">Poll Now</button>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h3>Registration Settings</h3>
+
                 <div class="form-group">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="registrationsEnabled" onchange="updateRegistrationSettings()" style="width: auto; margin-right: 10px;">
-                        <span>Allow new user registrations</span>
-                    </label>
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        When disabled, only admins can create new users
-                    </small>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h3>User Management</h3>
-                <div id="userManagementMessage"></div>
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="newUsername" placeholder="Enter username">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="newPassword" placeholder="Enter password">
-                </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="newUserAdmin" style="width: auto; margin-right: 10px;">
-                        <span>Make this user an admin</span>
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="registrationsEnabled" style="width: auto;">
+                        Allow New User Registrations
                     </label>
                 </div>
-                <button onclick="createUser()">Create User</button>
-                <div id="usersList" style="margin-top: 20px;"></div>
-            </div>
-            
-            <div class="card">
-                <h3>GitHub Access Tokens</h3>
+                <button class="btn btn-primary" onclick="updateConfig()">Save Registration Setting</button>
+                
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
+                
                 <div class="form-group">
-                    <label>Add Token</label>
-                    <input type="text" id="githubToken" placeholder="ghp_...">
+                    <label>Force Check Now</label>
+                    <button class="btn btn-primary" onclick="triggerPoll()">Trigger Poll</button>
                 </div>
-                <button onclick="addToken()">Add Token</button>
-                <div id="tokensList" style="margin-top: 20px;"></div>
             </div>
         </div>
     </div>
-    
+
+    {% if not session.get('user_id') %}
+    <div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: flex; justify-content: center; align-items: center;">
+        <div style="background: #1a2634; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1);">
+            <h2 style="text-align: center; margin-bottom: 20px; color: var(--primary-color);">Login</h2>
+            <div id="loginMessage" class="message"></div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="loginUsername">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" onkeypress="if(event.key === 'Enter') performLogin()">
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="performLogin()">Login</button>
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="#" onclick="toggleRegister()" style="color: var(--primary-color); text-decoration: none;">Need an account? Register</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="registerOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; justify-content: center; align-items: center;">
+        <div style="background: #1a2634; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1);">
+            <h2 style="text-align: center; margin-bottom: 20px; color: var(--primary-color);">Register</h2>
+            <div id="registerMessage" class="message"></div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="regUsername">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="regPassword">
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="performRegister()">Register</button>
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="#" onclick="toggleRegister()" style="color: var(--primary-color); text-decoration: none;">Have an account? Login</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <script>
-        let currentUser = null;
-        let isAdmin = false;
-        let allRepositories = [];
-        let sortAscending = false;
-        
-        function formatLocalDateTime(isoString) {
-            if (!isoString) return 'Never';
-            const date = new Date(isoString);
-            return date.toLocaleString(undefined, {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
+        // --- NAVIGATION LOGIC ---
+        function switchTab(tabName) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
             });
-        }
-        
-        window.onload = async () => {
-            await checkRegistrationStatus();
+            // Show selected content
+            document.getElementById(tabName).classList.add('active');
             
-            try {
-                const resp = await fetch('/api/user');
-                if (resp.ok) {
-                    const data = await resp.json();
-                    currentUser = data.username;
-                    isAdmin = data.is_admin;
-                    showApp();
-                }
-            } catch (e) {
-                // Not logged in
-            }
-        };
-        
-        async function checkRegistrationStatus() {
-            try {
-                const resp = await fetch('/api/config/registrations-enabled');
-                const data = await resp.json();
-                
-                const createBtn = document.getElementById('createAccountBtn');
-                if (!data.enabled) {
-                    createBtn.style.display = 'none';
-                }
-            } catch (e) {
-                console.error('Error checking registration status:', e);
-            }
+            // Update Tab styles
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // Load data based on tab
+            if (tabName === 'repositories') loadRepositories();
+            if (tabName === 'endpoints') loadEndpoints();
+            if (tabName === 'settings') loadConfig();
+
+            // Close mobile menu if open
+            closeMobileMenu();
         }
-        
-        function showMessage(elementId, message, type = 'error') {
-            const el = document.getElementById(elementId);
-            el.innerHTML = `<div class="message ${type}">${message}</div>`;
-            setTimeout(() => el.innerHTML = '', 5000);
+
+        // --- MOBILE MENU LOGIC ---
+        function toggleMobileMenu() {
+            const tabs = document.querySelector('.tabs');
+            const overlay = document.querySelector('.mobile-overlay');
+            tabs.classList.toggle('active');
+            overlay.classList.toggle('active');
         }
-        
-        function showLogin() {
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('registerForm').classList.add('hidden');
+
+        function closeMobileMenu() {
+            const tabs = document.querySelector('.tabs');
+            const overlay = document.querySelector('.mobile-overlay');
+            if(tabs) tabs.classList.remove('active');
+            if(overlay) overlay.classList.remove('active');
         }
-        
-        function showRegister() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('registerForm').classList.remove('hidden');
-        }
-        
-        function handleLoginKeypress(event) {
-            if (event.key === 'Enter') {
-                login();
+
+        // --- AUTH & DATA LOGIC (RETAINED FROM ORIGINAL) ---
+        function toggleRegister() {
+            const login = document.getElementById('loginOverlay');
+            const reg = document.getElementById('registerOverlay');
+            if (login.style.display === 'none') {
+                login.style.display = 'flex';
+                reg.style.display = 'none';
+            } else {
+                login.style.display = 'none';
+                reg.style.display = 'flex';
             }
         }
-        
-        function handleRegisterKeypress(event) {
-            if (event.key === 'Enter') {
-                register();
-            }
-        }
-        
-        async function login() {
+
+        async function performLogin() {
             const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
+            const pass = document.getElementById('loginPassword').value;
             
             try {
-                const resp = await fetch('/api/login', {
+                const resp = await fetch('/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({username, password})
+                    body: JSON.stringify({username, password: pass})
                 });
-                
                 const data = await resp.json();
                 
                 if (resp.ok) {
-                    currentUser = data.username;
-                    isAdmin = data.is_admin;
-                    showApp();
+                    window.location.reload();
                 } else {
-                    showMessage('authMessage', data.error);
+                    showMessage('loginMessage', data.error);
                 }
             } catch (e) {
-                showMessage('authMessage', 'Connection error');
+                showMessage('loginMessage', 'Connection error');
             }
         }
-        
-        async function register() {
+
+        async function performRegister() {
             const username = document.getElementById('regUsername').value;
-            const password = document.getElementById('regPassword').value;
+            const pass = document.getElementById('regPassword').value;
             
             try {
-                const resp = await fetch('/api/register', {
+                const resp = await fetch('/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({username, password})
+                    body: JSON.stringify({username, password: pass})
                 });
-                
                 const data = await resp.json();
                 
                 if (resp.ok) {
-                    showMessage('authMessage', 'Account created! Please login.', 'success');
-                    showLogin();
+                    alert('Registration successful! Please login.');
+                    toggleRegister();
                 } else {
-                    showMessage('authMessage', data.error);
+                    showMessage('registerMessage', data.error);
                 }
             } catch (e) {
-                showMessage('authMessage', 'Connection error');
+                showMessage('registerMessage', 'Connection error');
             }
         }
-        
+
         async function logout() {
-            await fetch('/api/logout', {method: 'POST'});
-            location.reload();
+            await fetch('/logout');
+            window.location.reload();
         }
-        
-        function showApp() {
-            document.getElementById('authContainer').classList.add('hidden');
-            document.getElementById('appContainer').classList.remove('hidden');
-            document.getElementById('currentUser').textContent = currentUser + (isAdmin ? ' (Admin)' : '');
-            
-            if (isAdmin) {
-                document.getElementById('adminTabButton').style.display = 'block';
-            }
-            
-            loadRepositories();
-            loadEndpoints();
+
+        function showMessage(elementId, text, type = 'error') {
+            const el = document.getElementById(elementId);
+            el.textContent = text;
+            el.className = 'message ' + type;
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 5000);
         }
-        
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(tab + 'Tab').classList.add('active');
-            
-            if (tab === 'repositories') loadRepositories();
-            else if (tab === 'endpoints') loadEndpoints();
-            else if (tab === 'admin' && isAdmin) loadAdminSettings();
-        }
-        
-        function toggleSortOrder() {
-            sortAscending = !sortAscending;
-            const toggle = document.getElementById('sortOrderToggle');
-            toggle.textContent = sortAscending ? '↑ Ascending' : '↓ Descending';
-            toggle.classList.toggle('active', sortAscending);
-            filterAndSortRepositories();
-        }
-        
-        function filterAndSortRepositories() {
-            const searchTerm = document.getElementById('repoSearch').value.toLowerCase();
-            const sortBy = document.getElementById('sortBy').value;
-            
-            let filtered = allRepositories.filter(r => {
-                const fullName = `${r.repo_owner}/${r.repo_name}`.toLowerCase();
-                return fullName.includes(searchTerm) || 
-                       (r.latest_release && r.latest_release.toLowerCase().includes(searchTerm));
-            });
-            
-            filtered.sort((a, b) => {
-                let comparison = 0;
-                
-                if (sortBy === 'name') {
-                    const nameA = `${a.repo_owner}/${a.repo_name}`.toLowerCase();
-                    const nameB = `${b.repo_owner}/${b.repo_name}`.toLowerCase();
-                    comparison = nameA.localeCompare(nameB);
-                } else if (sortBy === 'release') {
-                    if (!a.latest_release && !b.latest_release) comparison = 0;
-                    else if (!a.latest_release) comparison = 1;
-                    else if (!b.latest_release) comparison = -1;
-                    else comparison = a.latest_release.localeCompare(b.latest_release);
-                } else if (sortBy === 'checked') {
-                    const dateA = a.last_checked ? new Date(a.last_checked) : new Date(0);
-                    const dateB = b.last_checked ? new Date(b.last_checked) : new Date(0);
-                    comparison = dateB - dateA;
-                }
-                
-                return sortAscending ? comparison : -comparison;
-            });
-            
-            displayRepositories(filtered);
-        }
-        
-        function displayRepositories(repos) {
-            const list = document.getElementById('repositoriesList');
-            
-            if (repos.length === 0) {
-                if (allRepositories.length === 0) {
-                    list.innerHTML = '<div class="empty-state">No repositories added yet</div>';
-                } else {
-                    list.innerHTML = '<div class="empty-state">No repositories match your search</div>';
-                }
-                return;
-            }
-            
-            list.innerHTML = repos.map(r => `
-                <div class="list-item">
-                    <div class="list-item-content">
-                        <div class="list-item-title">
-                            ${r.repo_owner}/${r.repo_name}
-                            ${r.latest_release ? `<span class="badge success">${r.latest_release}</span>` : ''}
-                        </div>
-                        <div class="list-item-meta">
-                            ${r.latest_release_url ? `<a href="${r.latest_release_url}" target="_blank" style="color: var(--primary-color);">View Latest Release</a> • ` : ''}
-                            Last checked: ${formatLocalDateTime(r.last_checked)}
-                        </div>
-                        ${r.latest_release_body ? `<div class="release-body">${escapeHtml(r.latest_release_body.substring(0, 200))}${r.latest_release_body.length > 200 ? '...' : ''}</div>` : ''}
-                    </div>
-                    <div class="list-item-actions">
-                        <button class="danger small" onclick="deleteRepository(${r.id})">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
+
+        // Data Loading Functions
         async function loadRepositories() {
-            const resp = await fetch('/api/repositories');
-            allRepositories = await resp.json();
-            filterAndSortRepositories();
+            try {
+                const resp = await fetch('/api/repositories');
+                if (!resp.ok) return;
+                const repos = await resp.json();
+                
+                const list = document.getElementById('repoList');
+                list.innerHTML = repos.map(repo => `
+                    <div class="repo-item">
+                        <div class="repo-info" style="flex: 1;">
+                            <h3><a href="${repo.url}" target="_blank" style="color: var(--primary-color); text-decoration: none;">${repo.name}</a></h3>
+                            <p>Last checked: ${repo.last_checked ? new Date(repo.last_checked).toLocaleString() : 'Never'}</p>
+                            ${repo.last_version ? `
+                                <div style="margin-top: 5px;">
+                                    <span style="color: var(--success-color); font-weight: bold;">${repo.last_version}</span>
+                                    <span style="color: #666; margin-left: 10px;">${new Date(repo.updated_at).toLocaleDateString()}</span>
+                                </div>
+                                ${repo.latest_release_body ? `<div class="release-notes">${repo.latest_release_body}</div>` : ''}
+                            ` : '<p style="color: #666; margin-top: 5px;">No release info yet</p>'}
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteRepo(${repo.id})" style="margin-left: 10px;">×</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Failed to load repos", e);
+            }
         }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
+
         async function addRepository() {
-            const url = document.getElementById('repoUrl').value;
-            
+            const input = document.getElementById('repoUrl');
+            const url = input.value.trim();
+            if (!url) return;
+
             try {
                 const resp = await fetch('/api/repositories', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({repo_url: url})
+                    body: JSON.stringify({url})
                 });
-                
                 const data = await resp.json();
                 
                 if (resp.ok) {
-                    showMessage('repoMessage', 'Repository added successfully!', 'success');
-                    document.getElementById('repoUrl').value = '';
+                    input.value = '';
                     loadRepositories();
+                    showMessage('repoMessage', 'Repository added successfully', 'success');
                 } else {
                     showMessage('repoMessage', data.error);
                 }
@@ -998,383 +580,109 @@
                 showMessage('repoMessage', 'Error adding repository');
             }
         }
-        
-        async function deleteRepository(id) {
+
+        async function deleteRepo(id) {
             if (!confirm('Delete this repository?')) return;
-            
-            await fetch(`/api/repositories/${id}`, {method: 'DELETE'});
+            await fetch(`/api/repositories/${id}`, { method: 'DELETE' });
             loadRepositories();
         }
-        
+
         async function loadEndpoints() {
-            const resp = await fetch('/api/apprise-endpoints');
-            const endpoints = await resp.json();
-            
-            const list = document.getElementById('endpointsList');
-            
-            if (endpoints.length === 0) {
-                list.innerHTML = '<div class="empty-state">No endpoints configured</div>';
-                return;
-            }
-            
-            list.innerHTML = endpoints.map(e => `
-                <div class="list-item">
-                    <div class="list-item-content">
-                        <div class="list-item-title">${e.name}</div>
-                        <div class="list-item-meta" style="word-break: break-all;">${e.endpoint}</div>
-                    </div>
-                    <div class="list-item-actions">
-                        <button class="secondary small" onclick="testEndpoint(${e.id})">Test</button>
-                        <button class="danger small" onclick="deleteEndpoint(${e.id})">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        async function testEndpoint(id) {
-            showMessage('endpointMessage', 'Sending test notification...', 'success');
-            
             try {
-                const resp = await fetch(`/api/apprise-endpoints/${id}/test`, {
-                    method: 'POST'
-                });
+                const resp = await fetch('/api/endpoints');
+                if (!resp.ok) return;
+                const endpoints = await resp.json();
                 
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('endpointMessage', data.message, 'success');
-                } else {
-                    showMessage('endpointMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('endpointMessage', 'Error testing endpoint');
-            }
+                const list = document.getElementById('endpointList');
+                list.innerHTML = endpoints.map(ep => `
+                    <div class="endpoint-item">
+                        <span style="font-family: monospace; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">${ep.url}</span>
+                        <button class="btn btn-danger" onclick="deleteEndpoint(${ep.id})">Remove</button>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
         }
-        
+
         async function addEndpoint() {
-            const name = document.getElementById('endpointName').value;
-            const endpoint = document.getElementById('endpointUrl').value;
-            
+            const input = document.getElementById('endpointUrl');
+            const url = input.value.trim();
+            if (!url) return;
+
             try {
-                const resp = await fetch('/api/apprise-endpoints', {
+                const resp = await fetch('/api/endpoints', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name, endpoint})
+                    body: JSON.stringify({url})
                 });
                 
-                const data = await resp.json();
-                
                 if (resp.ok) {
-                    showMessage('endpointMessage', 'Endpoint added successfully!', 'success');
-                    document.getElementById('endpointName').value = '';
-                    document.getElementById('endpointUrl').value = '';
+                    input.value = '';
                     loadEndpoints();
+                    showMessage('endpointMessage', 'Endpoint added', 'success');
                 } else {
+                    const data = await resp.json();
                     showMessage('endpointMessage', data.error);
                 }
             } catch (e) {
                 showMessage('endpointMessage', 'Error adding endpoint');
             }
         }
-        
+
         async function deleteEndpoint(id) {
-            if (!confirm('Delete this endpoint?')) return;
-            
-            await fetch(`/api/apprise-endpoints/${id}`, {method: 'DELETE'});
+            if (!confirm('Remove this endpoint?')) return;
+            await fetch(`/api/endpoints/${id}`, { method: 'DELETE' });
             loadEndpoints();
         }
-        
-        async function loadAdminSettings() {
+
+        async function loadConfig() {
             try {
-                const resp = await fetch('/api/admin/config');
-                if (!resp.ok) {
-                    console.error('Failed to load admin config');
-                    return;
-                }
-                
+                const resp = await fetch('/api/config');
+                if (!resp.ok) return;
                 const config = await resp.json();
                 
-                document.getElementById('pollingInterval').value = config.polling_interval;
-                document.getElementById('registrationsEnabled').checked = config.registrations_enabled;
-                
-                const tokensList = document.getElementById('tokensList');
-                if (config.tokens.length === 0) {
-                    tokensList.innerHTML = '<div class="empty-state">No tokens configured</div>';
-                } else {
-                    tokensList.innerHTML = config.tokens.map(t => `
-                        <div class="list-item">
-                            <div class="list-item-content">
-                                <div class="list-item-title">${t.token}</div>
-                                <div class="list-item-meta">
-                                    Rate limit: ${t.rate_limit_remaining}/60 remaining
-                                </div>
-                            </div>
-                            <div class="list-item-actions">
-                                <button class="danger small" onclick="deleteToken(${t.id})">Delete</button>
-                            </div>
-                        </div>
-                    `).join('');
+                if (config.polling_interval) {
+                    document.getElementById('pollingInterval').value = config.polling_interval;
                 }
-                
-                await loadUsers();
-            } catch (e) {
-                console.error('Error loading admin settings:', e);
-                showMessage('adminMessage', 'Error loading admin settings');
-            }
+                if (config.registrations_enabled) {
+                    document.getElementById('registrationsEnabled').checked = config.registrations_enabled === 'true';
+                }
+            } catch (e) { console.error(e); }
         }
-        
-        async function updateRegistrationSettings() {
-            const enabled = document.getElementById('registrationsEnabled').checked;
+
+        async function updateConfig() {
+            const interval = document.getElementById('pollingInterval').value;
+            const regs = document.getElementById('registrationsEnabled').checked;
             
             try {
-                const resp = await fetch('/api/admin/config', {
+                await fetch('/api/config', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({registrations_enabled: enabled})
+                    body: JSON.stringify({key: 'polling_interval', value: interval})
                 });
                 
-                if (resp.ok) {
-                    showMessage('adminMessage', 'Registration settings updated!', 'success');
-                } else {
-                    showMessage('adminMessage', 'Error updating settings');
-                }
-            } catch (e) {
-                showMessage('adminMessage', 'Connection error');
-            }
-        }
-        
-        async function loadUsers() {
-            try {
-                const resp = await fetch('/api/admin/users');
-                const users = await resp.json();
-                
-                const usersList = document.getElementById('usersList');
-                if (users.length === 0) {
-                    usersList.innerHTML = '<div class="empty-state">No users</div>';
-                    return;
-                }
-                
-                usersList.innerHTML = users.map(u => `
-                    <div class="list-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">
-                                ${u.username}
-                                ${u.is_admin ? '<span class="badge admin">Admin</span>' : ''}
-                            </div>
-                            <div class="list-item-meta">
-                                ${u.repo_count} repositories • ${u.endpoint_count} endpoints<br>
-                                Created: ${formatLocalDateTime(u.created_at)}
-                            </div>
-                        </div>
-                        <div class="list-item-actions">
-                            ${!u.is_admin ? `<button class="secondary small" onclick="makeAdmin(${u.id})">Make Admin</button>` : 
-                              `<button class="secondary small" onclick="removeAdmin(${u.id})">Remove Admin</button>`}
-                            <button class="secondary small" onclick="changePassword(${u.id}, '${u.username}')">Change Password</button>
-                            <button class="danger small" onclick="deleteUser(${u.id}, '${u.username}')">Delete</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error('Error loading users:', e);
-            }
-        }
-        
-        async function createUser() {
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value;
-            const is_admin = document.getElementById('newUserAdmin').checked;
-            
-            if (!username || !password) {
-                showMessage('userManagementMessage', 'Username and password required');
-                return;
-            }
-            
-            try {
-                const resp = await fetch('/api/admin/users', {
+                await fetch('/api/config', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({username, password, is_admin})
+                    body: JSON.stringify({key: 'registrations_enabled', value: regs ? 'true' : 'false'})
                 });
                 
+                showMessage('adminMessage', 'Settings saved', 'success');
+            } catch (e) {
+                showMessage('adminMessage', 'Error saving settings');
+            }
+        }
+
+        async function triggerPoll() {
+            try {
+                const resp = await fetch('/api/poll', { method: 'POST' });
                 const data = await resp.json();
                 
                 if (resp.ok) {
-                    showMessage('userManagementMessage', 'User created successfully!', 'success');
-                    document.getElementById('newUsername').value = '';
-                    document.getElementById('newPassword').value = '';
-                    document.getElementById('newUserAdmin').checked = false;
-                    loadUsers();
-                } else {
-                    showMessage('userManagementMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error creating user');
-            }
-        }
-        
-        async function makeAdmin(userId) {
-            if (!confirm('Make this user an admin?')) return;
-            
-            try {
-                const resp = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({is_admin: true})
-                });
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'User promoted to admin!', 'success');
-                    loadUsers();
-                } else {
-                    const data = await resp.json();
-                    showMessage('userManagementMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error updating user');
-            }
-        }
-        
-        async function removeAdmin(userId) {
-            if (!confirm('Remove admin privileges from this user?')) return;
-            
-            try {
-                const resp = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({is_admin: false})
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'Admin privileges removed!', 'success');
-                    loadUsers();
-                } else {
-                    showMessage('userManagementMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error updating user');
-            }
-        }
-        
-        async function changePassword(userId, username) {
-            const newPassword = prompt(`Enter new password for ${username}:`);
-            if (!newPassword) return;
-            
-            try {
-                const resp = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({password: newPassword})
-                });
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'Password changed successfully!', 'success');
-                } else {
-                    showMessage('userManagementMessage', 'Error changing password');
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error changing password');
-            }
-        }
-        
-        async function deleteUser(userId, username) {
-            if (!confirm(`Delete user "${username}"? This will also delete all their repositories and endpoints.`)) return;
-            
-            try {
-                const resp = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'DELETE'
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'User deleted successfully!', 'success');
-                    loadUsers();
-                } else {
-                    showMessage('userManagementMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error deleting user');
-            }
-        }
-        
-        async function updatePollingInterval() {
-            const interval = parseInt(document.getElementById('pollingInterval').value);
-            
-            if (isNaN(interval) || interval < 1) {
-                showMessage('adminMessage', 'Polling interval must be at least 1 minute');
-                return;
-            }
-            
-            try {
-                const resp = await fetch('/api/admin/config', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({polling_interval: interval})
-                });
-                
-                if (resp.ok) {
-                    showMessage('adminMessage', 'Polling interval updated!', 'success');
-                } else {
-                    const data = await resp.json();
-                    showMessage('adminMessage', data.error || 'Error updating interval');
-                }
-            } catch (e) {
-                showMessage('adminMessage', 'Connection error');
-            }
-        }
-        
-        async function addToken() {
-            const token = document.getElementById('githubToken').value;
-            
-            try {
-                const resp = await fetch('/api/admin/tokens', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({token})
-                });
-                
-                if (resp.ok) {
-                    showMessage('adminMessage', 'Token added successfully!', 'success');
-                    document.getElementById('githubToken').value = '';
-                    loadAdminSettings();
-                } else {
-                    showMessage('adminMessage', 'Error adding token');
-                }
-            } catch (e) {
-                showMessage('adminMessage', 'Connection error');
-            }
-        }
-        
-        async function deleteToken(id) {
-            if (!confirm('Delete this token?')) return;
-            
-            await fetch('/api/admin/tokens', {
-                method: 'DELETE',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id})
-            });
-            loadAdminSettings();
-        }
-        
-        async function pollNow() {
-            showMessage('adminMessage', 'Polling all repositories now...', 'success');
-            
-            try {
-                const resp = await fetch('/api/admin/poll-now', {
-                    method: 'POST'
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('adminMessage', data.message + ' Check the repositories tab for updates.', 'success');
-                    setTimeout(() => {
-                        if (document.getElementById('repositoriesTab').classList.contains('active')) {
-                            loadRepositories();
-                        }
-                    }, 1000);
+                    showMessage('adminMessage', data.message + ' Check repositories tab.', 'success');
+                    // Refresh repo list if we are on that tab
+                    if (document.getElementById('repositoriesTab').classList.contains('active')) {
+                        loadRepositories();
+                    }
                 } else {
                     showMessage('adminMessage', data.error);
                 }
@@ -1382,30 +690,13 @@
                 showMessage('adminMessage', 'Error triggering poll');
             }
         }
-		
-		function toggleMobileMenu() {
-			const tabs = document.querySelector('.tabs');
-			const overlay = document.querySelector('.mobile-menu-overlay');
-			tabs.classList.toggle('active');
-			overlay.classList.toggle('active');
-		}
 
-		function closeMobileMenu() {
-			const tabs = document.querySelector('.tabs');
-			const overlay = document.querySelector('.mobile-menu-overlay');
-			tabs.classList.remove('active');
-			overlay.classList.remove('active');
-		}
-
-		// Close menu when a tab is clicked on mobile
-		document.addEventListener('DOMContentLoaded', function() {
-			if (window.innerWidth < 768) {
-				document.querySelectorAll('.tab').forEach(tab => {
-					tab.addEventListener('click', closeMobileMenu);
-				});
-			}
-		});
-		
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', () => {
+            {% if session.get('user_id') %}
+            loadRepositories();
+            {% endif %}
+        });
     </script>
 </body>
 </html>
