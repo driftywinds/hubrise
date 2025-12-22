@@ -29,7 +29,7 @@ on:
         type: string
         default: 'main'
       custom_tag:
-        description: 'Custom tag (optional, in addition to date tags)'
+        description: 'Custom tag(s) - comma-separated for multiple tags (e.g., latest,v1.2.0)'
         required: false
         type: string
         default: 'latest'
@@ -117,6 +117,30 @@ jobs:
           echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
           echo "Commit SHA: $COMMIT_SHA"
       
+      - name: Process custom tags
+        id: custom_tags
+        run: |
+          CUSTOM_TAG_INPUT="${{ github.event.inputs.custom_tag }}"
+          
+          # If custom tags are provided, process them
+          if [ -n "$CUSTOM_TAG_INPUT" ]; then
+            # Split comma-separated tags and create proper format for metadata-action
+            TAGS_OUTPUT=""
+            IFS=',' read -ra TAGS <<< "$CUSTOM_TAG_INPUT"
+            for tag in "${TAGS[@]}"; do
+              # Trim whitespace
+              tag=$(echo "$tag" | xargs)
+              if [ -n "$tag" ]; then
+                TAGS_OUTPUT="${TAGS_OUTPUT}type=raw,value=${tag}"$'\n'
+              fi
+            done
+            echo "tags<<EOF" >> $GITHUB_OUTPUT
+            echo "$TAGS_OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "tags=" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Check Dockerfile exists
         run: |
           cd ./repo
@@ -154,7 +178,7 @@ jobs:
           tags: |
             type=raw,value=dev
             type=raw,value=${{ steps.commit.outputs.sha }}
-            type=raw,value=${{ github.event.inputs.custom_tag }},enable=${{ github.event.inputs.custom_tag != '' }}
+            ${{ steps.custom_tags.outputs.tags }}
           labels: |
             org.opencontainers.image.source=${{ steps.repo_info.outputs.repo }}
             org.opencontainers.image.description=Built from ${{ steps.repo_info.outputs.repo }}@${{ steps.repo_info.outputs.branch }}
