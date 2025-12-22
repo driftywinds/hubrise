@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Release Monitor</title>
+    <title>Hubrise - GitHub Release Monitor</title>
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/driftywinds/hubrise/refs/heads/main/assets/icon.png">
     <style>
         :root {
@@ -620,7 +620,7 @@
 </head>
 <body>
     <div id="authContainer" class="auth-container">
-        <h2>GitHub Release Monitor</h2>
+        <h2>Hubrise - GitHub Release Monitor</h2>
         <div id="authMessage"></div>
         
         <div id="loginForm">
@@ -662,7 +662,7 @@
     
         <div class="main-header">
             <div class="header-content">
-                <h1>GitHub Release Monitor</h1>
+                <h1>Hubrise - GitHub Release Monitor</h1>
                 <div class="user-info">
                     Logged in as: <strong id="currentUser"></strong>
                 </div>
@@ -711,7 +711,7 @@
                 
                 <div class="endpoint-type-toggle" id="endpointTypeToggle" style="display: none;">
                     <button class="endpoint-type-btn active" onclick="toggleEndpointType('custom')" id="btnTypeCustom">Custom URL</button>
-                    <button class="endpoint-type-btn" onclick="toggleEndpointType('telegram')" id="btnTypeTelegram">Shared Telegram Bot</button>
+                    <button class="endpoint-type-btn" onclick="toggleEndpointType('telegram')" id="btnTypeTelegram">Hubrise Telegram Bot</button>
                 </div>
 
                 <div class="form-group">
@@ -1135,7 +1135,7 @@
                 // Mask shared telegram
                 if (e.endpoint.startsWith('telegram-shared://')) {
                     const chatId = e.endpoint.split('telegram-shared://')[1];
-                    displayEndpoint = `Shared Telegram Bot (Chat ID: ${chatId})`;
+                    displayEndpoint = `Hubrise Telegram Bot (@hubrise_bot) (Chat ID: ${chatId})`;
                 }
 
                 return `
