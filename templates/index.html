@@ -214,6 +214,17 @@
             font-size: 13px;
             width: auto;
         }
+        
+        button.text-only {
+            background: transparent;
+            color: var(--primary-color);
+            padding: 0;
+            width: auto;
+            font-weight: normal;
+        }
+        button.text-only:hover {
+            text-decoration: underline;
+        }
 
         /* --- List Items --- */
         .list-item {
@@ -301,8 +312,6 @@
         }
 
         /* --- MOBILE MENU & TABS --- */
-        
-        /* Toggle Button (Mobile Only) */
         .mobile-menu-toggle {
             display: flex;
             align-items: center;
@@ -310,7 +319,7 @@
             position: fixed;
             top: 20px;
             left: 20px;
-            z-index: 1010; /* Above sidebar to allow closing */
+            z-index: 1010;
             background: white;
             border: none;
             border-radius: var(--radius-element);
@@ -342,7 +351,6 @@
             transition: all 0.3s ease;
         }
         
-        /* Hamburger Animation to 'X' */
         .mobile-menu-toggle.active .hamburger-icon span:nth-child(1) {
             transform: translateY(6px) rotate(45deg);
         }
@@ -353,13 +361,12 @@
             transform: translateY(-6px) rotate(-45deg);
         }
         
-        /* Overlay */
         .mobile-menu-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px); /* Sleek glass effect */
+            backdrop-filter: blur(4px);
             z-index: 998;
             opacity: 0;
             transition: opacity 0.3s;
@@ -370,14 +377,12 @@
             opacity: 1;
         }
 
-        /* Tabs Container */
         .tabs {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
         }
 
-        /* Mobile Side Menu Styles */
         @media (max-width: 767px) {
             .tabs {
                 position: fixed;
@@ -387,12 +392,12 @@
                 height: 100vh;
                 background: white;
                 flex-direction: column;
-                padding: 90px 16px 20px; /* Space for toggle button */
+                padding: 90px 16px 20px;
                 margin: 0;
                 box-shadow: 4px 0 24px rgba(0,0,0,0.15);
                 z-index: 999;
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                transform: translateX(-100%); /* Hide off-screen */
+                transform: translateX(-100%);
                 visibility: hidden;
                 overflow-y: auto;
             }
@@ -426,13 +431,11 @@
                 font-weight: 600;
             }
             
-            /* Main Header adjustment on mobile to not hide behind button */
             .main-header {
                 margin-top: 60px;
             }
         }
 
-        /* Desktop Styles (Untouched/Preserved) */
         @media (min-width: 768px) {
             .mobile-menu-toggle {
                 display: none;
@@ -582,6 +585,37 @@
                 margin-right: 10px !important;
             }
         }
+
+        /* Sub-tabs for Endpoints */
+        .endpoint-type-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .endpoint-type-btn {
+            background: transparent;
+            color: #666;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            font-size: 14px;
+            cursor: pointer;
+            width: auto;
+        }
+        
+        .endpoint-type-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .endpoint-type-btn.active {
+            background: #e1f0fa;
+            color: var(--primary-color);
+            border-color: #d0e5f5;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -672,20 +706,40 @@
         
         <div id="endpointsTab" class="tab-content">
             <div class="card">
-                <h3>Add Apprise Endpoint</h3>
+                <h3>Add Endpoint</h3>
                 <div id="endpointMessage"></div>
+                
+                <div class="endpoint-type-toggle" id="endpointTypeToggle" style="display: none;">
+                    <button class="endpoint-type-btn active" onclick="toggleEndpointType('custom')" id="btnTypeCustom">Custom URL</button>
+                    <button class="endpoint-type-btn" onclick="toggleEndpointType('telegram')" id="btnTypeTelegram">Shared Telegram Bot</button>
+                </div>
+
                 <div class="form-group">
                     <label>Endpoint Name (Optional)</label>
-                    <input type="text" id="endpointName" placeholder="My Discord Webhook">
+                    <input type="text" id="endpointName" placeholder="My Notifications">
                 </div>
-                <div class="form-group">
-                    <label>Apprise URL</label>
-                    <input type="text" id="endpointUrl" placeholder="discord://webhook_id/webhook_token">
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        Examples: discord://..., slack://..., mailto://..., telegram://...
-                    </small>
+                
+                <div id="formTypeCustom">
+                    <div class="form-group">
+                        <label>Apprise URL</label>
+                        <input type="text" id="endpointUrl" placeholder="discord://webhook_id/webhook_token">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Examples: discord://..., slack://..., mailto://..., telegram://...
+                        </small>
+                    </div>
+                    <button onclick="addEndpoint()">Add Custom Endpoint</button>
                 </div>
-                <button onclick="addEndpoint()">Add Endpoint</button>
+
+                <div id="formTypeTelegram" style="display: none;">
+                    <div class="form-group">
+                        <label>Telegram Chat ID</label>
+                        <input type="text" id="telegramChatId" placeholder="123456789">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Don't know your Chat ID? Message <a href="https://t.me/userinfobot" target="_blank" style="color: var(--primary-color);">@userinfobot</a> on Telegram.
+                        </small>
+                    </div>
+                    <button onclick="addTelegramEndpoint()">Add Telegram Bot</button>
+                </div>
             </div>
             
             <div class="card">
@@ -762,6 +816,7 @@
         let isAdmin = false;
         let allRepositories = [];
         let sortAscending = false;
+        let telegramEnabled = false;
         
         function formatLocalDateTime(isoString) {
             if (!isoString) return 'Never';
@@ -785,6 +840,7 @@
                     const data = await resp.json();
                     currentUser = data.username;
                     isAdmin = data.is_admin;
+                    telegramEnabled = data.telegram_bot_configured;
                     showApp();
                 }
             } catch (e) {
@@ -851,6 +907,11 @@
                     currentUser = data.username;
                     isAdmin = data.is_admin;
                     showApp();
+                    // Need to reload user data to check telegram status
+                    const userResp = await fetch('/api/user');
+                    const userData = await userResp.json();
+                    telegramEnabled = userData.telegram_bot_configured;
+                    setupEndpointUI(); 
                 } else {
                     showMessage('authMessage', data.error);
                 }
@@ -897,8 +958,36 @@
                 document.getElementById('adminTabButton').style.display = 'block';
             }
             
+            setupEndpointUI();
             loadRepositories();
             loadEndpoints();
+        }
+        
+        function setupEndpointUI() {
+            if (telegramEnabled) {
+                document.getElementById('endpointTypeToggle').style.display = 'flex';
+            } else {
+                document.getElementById('endpointTypeToggle').style.display = 'none';
+            }
+        }
+        
+        function toggleEndpointType(type) {
+            const btnCustom = document.getElementById('btnTypeCustom');
+            const btnTelegram = document.getElementById('btnTypeTelegram');
+            const formCustom = document.getElementById('formTypeCustom');
+            const formTelegram = document.getElementById('formTypeTelegram');
+            
+            if (type === 'custom') {
+                btnCustom.classList.add('active');
+                btnTelegram.classList.remove('active');
+                formCustom.style.display = 'block';
+                formTelegram.style.display = 'none';
+            } else {
+                btnCustom.classList.remove('active');
+                btnTelegram.classList.add('active');
+                formCustom.style.display = 'none';
+                formTelegram.style.display = 'block';
+            }
         }
         
         function switchTab(tab) {
@@ -1041,18 +1130,26 @@
                 return;
             }
             
-            list.innerHTML = endpoints.map(e => `
+            list.innerHTML = endpoints.map(e => {
+                let displayEndpoint = e.endpoint;
+                // Mask shared telegram
+                if (e.endpoint.startsWith('telegram-shared://')) {
+                    const chatId = e.endpoint.split('telegram-shared://')[1];
+                    displayEndpoint = `Shared Telegram Bot (Chat ID: ${chatId})`;
+                }
+
+                return `
                 <div class="list-item">
                     <div class="list-item-content">
                         <div class="list-item-title">${e.name}</div>
-                        <div class="list-item-meta" style="word-break: break-all;">${e.endpoint}</div>
+                        <div class="list-item-meta" style="word-break: break-all;">${displayEndpoint}</div>
                     </div>
                     <div class="list-item-actions">
                         <button class="secondary small" onclick="testEndpoint(${e.id})">Test</button>
                         <button class="danger small" onclick="deleteEndpoint(${e.id})">Delete</button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
         
         async function testEndpoint(id) {
@@ -1079,6 +1176,25 @@
             const name = document.getElementById('endpointName').value;
             const endpoint = document.getElementById('endpointUrl').value;
             
+            submitEndpoint(name, endpoint);
+        }
+
+        async function addTelegramEndpoint() {
+            const name = document.getElementById('endpointName').value;
+            const chatId = document.getElementById('telegramChatId').value;
+            
+            if (!chatId) {
+                showMessage('endpointMessage', 'Chat ID required');
+                return;
+            }
+
+            const endpoint = `telegram-shared://${chatId}`;
+            const endpointName = name || `Telegram (${chatId})`;
+            
+            submitEndpoint(endpointName, endpoint);
+        }
+        
+        async function submitEndpoint(name, endpoint) {
             try {
                 const resp = await fetch('/api/apprise-endpoints', {
                     method: 'POST',
@@ -1092,6 +1208,7 @@
                     showMessage('endpointMessage', 'Endpoint added successfully!', 'success');
                     document.getElementById('endpointName').value = '';
                     document.getElementById('endpointUrl').value = '';
+                    document.getElementById('telegramChatId').value = '';
                     loadEndpoints();
                 } else {
                     showMessage('endpointMessage', data.error);

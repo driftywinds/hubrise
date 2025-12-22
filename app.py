@@ -13,12 +13,16 @@ from functools import wraps
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(32)
 
+# Configuration
 # Support environment variable for database path
 db_path = os.getenv('DATABASE_PATH', 'sqlite:///github_monitor.db')
 if not db_path.startswith('sqlite:///'):
     db_path = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_DATABASE_URI'] = db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Shared Telegram Bot Configuration
+app.config['TELEGRAM_BOT_TOKEN'] = os.getenv('TELEGRAM_BOT_TOKEN')
 
 db = SQLAlchemy(app)
 
@@ -190,6 +194,23 @@ class MonitoringService:
             except Exception as e:
                 print(f"Error checking {repo.repo_owner}/{repo.repo_name}: {e}")
     
+    def _resolve_endpoint(self, endpoint_str):
+        """
+        Resolves internal protocol schemas to actual Apprise URLs.
+        Handles 'telegram-shared://chat_id' -> 'tgram://token/chat_id'
+        """
+        if endpoint_str.startswith('telegram-shared://'):
+            chat_id = endpoint_str.split('telegram-shared://')[1]
+            token = app.config.get('TELEGRAM_BOT_TOKEN')
+            if token:
+                # Construct the real Telegram URL
+                # tgram://{bot_token}/{chat_id}
+                return f"tgram://{token}/{chat_id}"
+            else:
+                print(f"Error: Shared Telegram Bot Token not configured in environment.")
+                return None
+        return endpoint_str
+
     def _send_notifications(self, repo, release_info):
         user = db.session.get(User, repo.user_id)
         endpoints = AppriseEndpoint.query.filter_by(user_id=user.id).all()
@@ -202,10 +223,17 @@ class MonitoringService:
         
         for endpoint in endpoints:
             try:
-                self._send_apprise_notification(endpoint.endpoint, title, body)
-                print(f"Notification sent to {user.username}: {title}")
+                # Resolve the actual URL (handles shared bot logic)
+                real_url = self._resolve_endpoint(endpoint.endpoint)
+                
+                if real_url:
+                    self._send_apprise_notification(real_url, title, body)
+                    print(f"Notification sent to {user.username} via {endpoint.name}")
+                else:
+                    print(f"Skipping notification for {user.username}: Endpoint resolution failed ({endpoint.name})")
+                    
             except Exception as e:
-                print(f"Error sending notification to {endpoint.endpoint}: {e}")
+                print(f"Error sending notification to {endpoint.name}: {e}")
     
     def _send_apprise_notification(self, endpoint, title, body):
         try:
@@ -306,9 +334,14 @@ def logout():
 @login_required
 def get_user():
     user = db.session.get(User, session['user_id'])
+    
+    # Check if shared telegram bot is configured on server
+    telegram_configured = bool(app.config.get('TELEGRAM_BOT_TOKEN'))
+    
     return jsonify({
         'username': user.username,
-        'is_admin': user.is_admin
+        'is_admin': user.is_admin,
+        'telegram_bot_configured': telegram_configured
     })
 
 @app.route('/api/repositories', methods=['GET', 'POST'])
@@ -430,9 +463,14 @@ def test_apprise_endpoint(endpoint_id):
         return jsonify({'error': 'Endpoint not found'}), 404
     
     try:
+        # Resolve shared bot URL if needed
+        real_url = monitor_service._resolve_endpoint(endpoint.endpoint)
+        if not real_url:
+            return jsonify({'error': 'Failed to resolve endpoint. If this is a shared Telegram bot, contact admin.'}), 400
+
         import apprise
         apobj = apprise.Apprise()
-        apobj.add(endpoint.endpoint)
+        apobj.add(real_url)
         success = apobj.notify(
             title="Test Notification - GitHub Release Monitor",
             body="This is a test notification. If you received this, your Apprise endpoint is configured correctly!"
