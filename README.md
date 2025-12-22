@@ -10,9 +10,10 @@ Also available on Docker Hub - [```driftywinds/hubrise:latest```](https://hub.do
 
 ### How to use: - 
 
-1. Download the ```compose.yml``` file from the repo [here](https://github.com/driftywinds/hubrise).
-2. Run ```docker compose up -d```.
-3. Setup the first user (which has admin privileges by default) here `https://localhost:3035` and get started.
+1. Download the ```compose.yml``` and optionally the ```.env``` file from the repo [here](https://github.com/driftywinds/hubrise). The `.env` file is only useful if you want to let the users of your instance get their Telegram notifications from a bot you have created so they don't have to create a bot for themselves.
+2. Configure the `.env` file with your own Telegram bot token.
+3. Run ```docker compose up -d```.
+4. Setup the first user (which has admin privileges by default) here `https://localhost:3035` and get started.
 
 <br>
 
