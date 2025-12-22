@@ -22,6 +22,7 @@ on:
         description: 'Source repository (e.g., https://git.lolcat.ca/lolcat/4get or owner/repo for GitHub)'
         required: false
         type: string
+        default: 'https://github.com/driftywinds/hubrise'
       source_branch:
         description: 'Branch to build from'
         required: false
@@ -31,6 +32,7 @@ on:
         description: 'Custom tag (optional, in addition to date tags)'
         required: false
         type: string
+        default: 'latest'
 
 env:
   # CUSTOMIZE THIS: Source repository to clone and build (full URL or GitHub owner/repo)
@@ -150,7 +152,7 @@ jobs:
         with:
           images: ${{ env.GHCR_IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
+            type=raw,value=dev
             type=raw,value=${{ steps.commit.outputs.sha }}
             type=raw,value=${{ github.event.inputs.custom_tag }},enable=${{ github.event.inputs.custom_tag != '' }}
           labels: |
