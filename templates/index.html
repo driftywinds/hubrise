@@ -245,6 +245,8 @@
         .list-item-content {
             flex: 1;
             margin-bottom: 12px;
+            /* Ensures flex child shrinks properly for wrapping */
+            min-width: 0; 
         }
 
         @media (min-width: 768px) {
@@ -258,13 +260,18 @@
             color: #333;
             margin-bottom: 6px;
             font-size: 15px;
-            word-break: break-word;
+            /* Prevent title from overflowing */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .list-item-meta {
             font-size: 13px;
             color: #888;
             line-height: 1.5;
+            /* Prevent meta urls from overflowing */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .list-item-actions {
@@ -571,6 +578,10 @@
             padding: 12px;
             background: white;
             border-radius: var(--radius-element);
+            /* Fix overflow issues on mobile */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         @media (max-width: 767px) {
@@ -662,7 +673,7 @@
     
         <div class="main-header">
             <div class="header-content">
-                <h1>Hubrise - GitHub Release Monitor</h1>
+                <h1>Hubrise</h1>
                 <div class="user-info">
                     Logged in as: <strong id="currentUser"></strong>
                 </div>
@@ -711,7 +722,7 @@
                 
                 <div class="endpoint-type-toggle" id="endpointTypeToggle" style="display: none;">
                     <button class="endpoint-type-btn active" onclick="toggleEndpointType('custom')" id="btnTypeCustom">Custom URL</button>
-                    <button class="endpoint-type-btn" onclick="toggleEndpointType('telegram')" id="btnTypeTelegram">Hubrise Telegram Bot</button>
+                    <button class="endpoint-type-btn" onclick="toggleEndpointType('telegram')" id="btnTypeTelegram">Hubrise Telegram Bot (@hubrise_bot)</button>
                 </div>
 
                 <div class="form-group">
@@ -735,7 +746,7 @@
                         <label>Telegram Chat ID</label>
                         <input type="text" id="telegramChatId" placeholder="123456789">
                         <small style="color: #666; display: block; margin-top: 5px;">
-                            Please /start a chat with <a href="https://t.me/hubrise_bot" target="_blank" style="color: var(--primary-color);">@hubrise_bot</a> before adding/testing this or it won't work. Don't know your Chat ID? Message <a href="https://t.me/userinfobot" target="_blank" style="color: var(--primary-color);">@userinfobot</a> on Telegram. 
+                            Please /start a chat with <a href="https://t.me/hubrise_bot" target="_blank" style="color: var(--primary-color);">@hubrise_bot</a> before adding/testing this or it won't work. Don't know your Chat ID? Message <a href="https://t.me/userinfobot" target="_blank" style="color: var(--primary-color);">@userinfobot</a> on Telegram.
                         </small>
                     </div>
                     <button onclick="addTelegramEndpoint()">Add Telegram Bot</button>
