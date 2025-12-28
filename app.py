@@ -217,33 +217,18 @@ class MonitoringService:
     
         title = f"New Release: {repo.repo_owner}/{repo.repo_name}"
     
-        # Build the body with release notes in code block
-        body_parts = [f"Version {release_info['tag_name']} has been released!"]
-    
-        if release_info.get('name'):
-            body_parts.append(f"Release Name: {release_info['name']}")
-    
-        # Add release notes in code block if available
+        # Get release notes
         release_body = release_info.get('body', '').strip()
+    
+        # Sanitize and limit release notes
         if release_body:
             # Limit to 800 characters to keep notifications reasonable
             max_chars = 800
             if len(release_body) > max_chars:
                 release_body = release_body[:max_chars] + "..."
         
-            # Escape backticks to prevent code block injection
-            # Replace ` with ′ (prime symbol) or remove them
-            release_body = release_body.replace('`', '′')
-        
-            # Also escape any other potentially problematic characters
-            # Remove or replace null bytes and other control characters
+            # Remove or replace control characters (except newlines, returns, tabs)
             release_body = ''.join(char if ord(char) >= 32 or char in '\n\r\t' else '' for char in release_body)
-        
-            body_parts.append(f"\nRelease Notes:\n```\n{release_body}\n```")
-    
-        body_parts.append(f"\nView Release: {release_info['html_url']}")
-    
-        body = '\n'.join(body_parts)
     
         for endpoint in endpoints:
             try:
@@ -251,7 +236,16 @@ class MonitoringService:
                 real_url = self._resolve_endpoint(endpoint.endpoint)
             
                 if real_url:
-                    self._send_apprise_notification(real_url, title, body)
+                    # Build appropriate body based on endpoint type
+                    if real_url.startswith('tgram://'):
+                        # Telegram with HTML formatting
+                        body = self._build_telegram_body(repo, release_info, release_body)
+                        self._send_apprise_notification(real_url, title, body, body_format='html')
+                    else:
+                        # Other services with text formatting
+                        body = self._build_text_body(repo, release_info, release_body)
+                        self._send_apprise_notification(real_url, title, body, body_format='text')
+                
                     print(f"Notification sent to {user.username} via {endpoint.name}")
                 else:
                     print(f"Skipping notification for {user.username}: Endpoint resolution failed ({endpoint.name})")
@@ -259,12 +253,54 @@ class MonitoringService:
             except Exception as e:
                 print(f"Error sending notification to {endpoint.name}: {e}")
 
-    def _send_apprise_notification(self, endpoint, title, body):
+    def _build_telegram_body(self, repo, release_info, release_body):
+        """Build notification body with Telegram HTML formatting"""
+        import html
+    
+        body_parts = [f"Version {html.escape(release_info['tag_name'])} has been released!"]
+    
+        if release_info.get('name'):
+            body_parts.append(f"Release Name: {html.escape(release_info['name'])}")
+    
+        if release_body:
+            body_parts.append("\nRelease Notes:")
+            # Escape HTML entities and wrap in <pre> for monospace
+            escaped_body = html.escape(release_body)
+            body_parts.append(f"<pre>{escaped_body}</pre>")
+    
+        body_parts.append(f"\nView Release: {html.escape(release_info['html_url'])}")
+    
+        return '\n'.join(body_parts)
+
+    def _build_text_body(self, repo, release_info, release_body):
+        """Build notification body for text-based services"""
+        body_parts = [f"Version {release_info['tag_name']} has been released!"]
+    
+        if release_info.get('name'):
+            body_parts.append(f"Release Name: {release_info['name']}")
+    
+        if release_body:
+            body_parts.append("\nRelease Notes:")
+            body_parts.append("---")
+            body_parts.append(release_body)
+            body_parts.append("---")
+    
+        body_parts.append(f"\nView Release: {release_info['html_url']}")
+    
+        return '\n'.join(body_parts)
+
+    def _send_apprise_notification(self, endpoint, title, body, body_format='text'):
+        """Send notification via Apprise with specified body format"""
         try:
             import apprise
             apobj = apprise.Apprise()
             apobj.add(endpoint)
-            apobj.notify(title=title, body=body)
+        
+            # Set body format based on endpoint type
+            if body_format == 'html':
+                apobj.notify(title=title, body=body, body_format=apprise.NotifyFormat.HTML)
+            else:
+                apobj.notify(title=title, body=body, body_format=apprise.NotifyFormat.TEXT)
         except ImportError:
             # Fallback if apprise not installed
             print(f"Apprise not installed. Would send: {title} - {body}")
