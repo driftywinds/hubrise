@@ -214,27 +214,51 @@ class MonitoringService:
     def _send_notifications(self, repo, release_info):
         user = db.session.get(User, repo.user_id)
         endpoints = AppriseEndpoint.query.filter_by(user_id=user.id).all()
-        
+    
         title = f"New Release: {repo.repo_owner}/{repo.repo_name}"
-        body = f"Version {release_info['tag_name']} has been released!\n\n"
+    
+        # Build the body with release notes in code block
+        body_parts = [f"Version {release_info['tag_name']} has been released!"]
+    
         if release_info.get('name'):
-            body += f"Release Name: {release_info['name']}\n"
-        body += f"View Release: {release_info['html_url']}"
+            body_parts.append(f"Release Name: {release_info['name']}")
+    
+        # Add release notes in code block if available
+        release_body = release_info.get('body', '').strip()
+        if release_body:
+            # Limit to 800 characters to keep notifications reasonable
+            max_chars = 800
+            if len(release_body) > max_chars:
+                release_body = release_body[:max_chars] + "..."
         
+            # Escape backticks to prevent code block injection
+            # Replace ` with ′ (prime symbol) or remove them
+            release_body = release_body.replace('`', '′')
+        
+            # Also escape any other potentially problematic characters
+            # Remove or replace null bytes and other control characters
+            release_body = ''.join(char if ord(char) >= 32 or char in '\n\r\t' else '' for char in release_body)
+        
+            body_parts.append(f"\nRelease Notes:\n```\n{release_body}\n```")
+    
+        body_parts.append(f"\nView Release: {release_info['html_url']}")
+    
+        body = '\n'.join(body_parts)
+    
         for endpoint in endpoints:
             try:
                 # Resolve the actual URL (handles shared bot logic)
                 real_url = self._resolve_endpoint(endpoint.endpoint)
-                
+            
                 if real_url:
                     self._send_apprise_notification(real_url, title, body)
                     print(f"Notification sent to {user.username} via {endpoint.name}")
                 else:
                     print(f"Skipping notification for {user.username}: Endpoint resolution failed ({endpoint.name})")
-                    
+                
             except Exception as e:
                 print(f"Error sending notification to {endpoint.name}: {e}")
-    
+
     def _send_apprise_notification(self, endpoint, title, body):
         try:
             import apprise
