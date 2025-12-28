@@ -92,6 +92,12 @@
                 margin-bottom: 0;
             }
         }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
         h1 {
             color: #333;
@@ -585,9 +591,12 @@
         }
 
         @media (max-width: 767px) {
-            .main-header button {
+            .header-actions {
                 width: 100%;
                 margin-top: 12px;
+            }
+            .header-actions button {
+                flex: 1;
             }
             
             input[type="checkbox"] {
@@ -626,6 +635,67 @@
             color: var(--primary-color);
             border-color: #d0e5f5;
             font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay-bg {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay-bg.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: var(--radius-container);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: transparent;
+            color: #666;
+            font-size: 24px;
+            padding: 0;
+            width: auto;
+            line-height: 1;
+        }
+        
+        .close-modal:hover {
+            background: transparent;
+            color: #333;
+        }
+        
+        .settings-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .settings-option:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
@@ -678,7 +748,10 @@
                     Logged in as: <strong id="currentUser"></strong>
                 </div>
             </div>
-            <button onclick="logout()">Logout</button>
+            <div class="header-actions">
+                <button onclick="openSettings()" class="secondary">Settings</button>
+                <button onclick="logout()">Logout</button>
+            </div>
         </div>
         
         <div class="tabs">
@@ -822,6 +895,24 @@
         </div>
     </div>
     
+    <div id="settingsModal" class="modal-overlay-bg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-modal" onclick="closeSettings()">&times;</button>
+            </div>
+            <div class="settings-group">
+                <div class="settings-option">
+                    <label for="timeFormatToggle" style="margin: 0; cursor: pointer;">Use 24-hour time format</label>
+                    <input type="checkbox" id="timeFormatToggle" onchange="saveSettings()" style="width: auto;">
+                </div>
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="closeSettings()" class="secondary small">Close</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         let currentUser = null;
         let isAdmin = false;
@@ -829,17 +920,49 @@
         let sortAscending = false;
         let telegramEnabled = false;
         
+        // Initialize settings from localStorage
+        let use24HourTime = localStorage.getItem('use24HourTime') === 'true';
+        
         function formatLocalDateTime(isoString) {
-            if (!isoString) return 'Never';
+            if (!isoString || isoString === 'Never') return 'Never';
+            
+            // Fix UTC parsing: if string doesn't have Z or + offset, append Z to force UTC interpretation
+            if (isoString.indexOf('Z') === -1 && isoString.indexOf('+') === -1) {
+                isoString += 'Z';
+            }
+            
             const date = new Date(isoString);
+            
             return date.toLocaleString(undefined, {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-                second: '2-digit'
+                second: '2-digit',
+                hour12: !use24HourTime
             });
+        }
+        
+        // Settings Functions
+        function openSettings() {
+            document.getElementById('timeFormatToggle').checked = use24HourTime;
+            document.getElementById('settingsModal').classList.add('active');
+        }
+        
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+        
+        function saveSettings() {
+            use24HourTime = document.getElementById('timeFormatToggle').checked;
+            localStorage.setItem('use24HourTime', use24HourTime);
+            
+            // Refresh views to show new time format
+            filterAndSortRepositories();
+            if (isAdmin && document.getElementById('adminTab').classList.contains('active')) {
+                loadUsers(); // Refresh user list dates
+            }
         }
         
         window.onload = async () => {
