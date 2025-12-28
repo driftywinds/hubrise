@@ -241,6 +241,10 @@ class MonitoringService:
                         # Telegram with HTML formatting
                         body = self._build_telegram_body(repo, release_info, release_body)
                         self._send_apprise_notification(real_url, title, body, body_format='html')
+                    elif 'discord' in real_url.lower():
+                        # Discord with markdown (triple backticks)
+                        body = self._build_discord_body(repo, release_info, release_body)
+                        self._send_apprise_notification(real_url, title, body, body_format='markdown')
                     else:
                         # Other services with text formatting
                         body = self._build_text_body(repo, release_info, release_body)
@@ -272,6 +276,25 @@ class MonitoringService:
     
         return '\n'.join(body_parts)
 
+    def _build_discord_body(self, repo, release_info, release_body):
+        """Build notification body with Discord markdown formatting"""
+        body_parts = [f"Version {release_info['tag_name']} has been released!"]
+    
+        if release_info.get('name'):
+            body_parts.append(f"Release Name: {release_info['name']}")
+    
+        if release_body:
+            # Escape backticks to prevent code block injection
+            # Replace ` with ′ (prime symbol)
+            safe_body = release_body.replace('`', '′')
+        
+            body_parts.append("\nRelease Notes:")
+            body_parts.append(f"```\n{safe_body}\n```")
+    
+        body_parts.append(f"\nView Release: {release_info['html_url']}")
+    
+        return '\n'.join(body_parts)
+
     def _build_text_body(self, repo, release_info, release_body):
         """Build notification body for text-based services"""
         body_parts = [f"Version {release_info['tag_name']} has been released!"]
@@ -299,6 +322,8 @@ class MonitoringService:
             # Set body format based on endpoint type
             if body_format == 'html':
                 apobj.notify(title=title, body=body, body_format=apprise.NotifyFormat.HTML)
+            elif body_format == 'markdown':
+                apobj.notify(title=title, body=body, body_format=apprise.NotifyFormat.MARKDOWN)
             else:
                 apobj.notify(title=title, body=body, body_format=apprise.NotifyFormat.TEXT)
         except ImportError:
