@@ -45,6 +45,7 @@ class Repository(db.Model):
     latest_release = db.Column(db.String(100))
     latest_release_url = db.Column(db.String(500))
     latest_release_body = db.Column(db.Text)
+    notify_pre_releases = db.Column(db.Boolean, default=False)
     last_checked = db.Column(db.DateTime)
     added_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -89,7 +90,10 @@ class GitHubAPI:
         
         return None
     
-    def get_latest_release(self, owner, repo):
+    def get_latest_release(self, owner, repo, include_prereleases=False):
+        if include_prereleases:
+            return self._get_latest_release_with_prereleases(owner, repo)
+        
         url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
         headers = {}
         
@@ -101,16 +105,7 @@ class GitHubAPI:
             resp = requests.get(url, headers=headers, timeout=30)
             
             # Update rate limit info
-            if token:
-                remaining = resp.headers.get('X-RateLimit-Remaining')
-                reset = resp.headers.get('X-RateLimit-Reset')
-                if remaining:
-                    token_obj = GitHubToken.query.filter_by(token=token).first()
-                    if token_obj:
-                        token_obj.rate_limit_remaining = int(remaining)
-                        if reset:
-                            token_obj.rate_limit_reset = datetime.fromtimestamp(int(reset))
-                        db.session.commit()
+            self._update_rate_limit(token, resp)
             
             if resp.status_code == 200:
                 data = resp.json()
@@ -118,11 +113,11 @@ class GitHubAPI:
                     'tag_name': data.get('tag_name'),
                     'html_url': data.get('html_url'),
                     'name': data.get('name'),
-                    'body': data.get('body', '')[:500],  # First 500 chars of release notes
-                    'published_at': data.get('published_at')
+                    'body': data.get('body', '')[:500],
+                    'published_at': data.get('published_at'),
+                    'prerelease': data.get('prerelease', False)
                 }
             elif resp.status_code == 404:
-                # No releases found
                 return None
             return None
         except requests.exceptions.Timeout:
@@ -134,6 +129,56 @@ class GitHubAPI:
         except Exception as e:
             print(f"Error fetching release for {owner}/{repo}: {e}")
             return None
+    
+    def _get_latest_release_with_prereleases(self, owner, repo):
+        """Fetch latest release including pre-releases by listing all releases."""
+        url = f"https://api.github.com/repos/{owner}/{repo}/releases?per_page=10"
+        headers = {}
+        
+        token = self.get_token()
+        if token:
+            headers['Authorization'] = f'token {token}'
+        
+        try:
+            resp = requests.get(url, headers=headers, timeout=30)
+            self._update_rate_limit(token, resp)
+            
+            if resp.status_code == 200:
+                releases = resp.json()
+                if releases:
+                    # Return the most recent release (first in list)
+                    data = releases[0]
+                    return {
+                        'tag_name': data.get('tag_name'),
+                        'html_url': data.get('html_url'),
+                        'name': data.get('name'),
+                        'body': data.get('body', '')[:500],
+                        'published_at': data.get('published_at'),
+                        'prerelease': data.get('prerelease', False)
+                    }
+            return None
+        except requests.exceptions.Timeout:
+            print(f"Timeout fetching releases for {owner}/{repo} - will retry next cycle")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Network error fetching releases for {owner}/{repo}: {e}")
+            return None
+        except Exception as e:
+            print(f"Error fetching releases for {owner}/{repo}: {e}")
+            return None
+    
+    def _update_rate_limit(self, token, resp):
+        """Update rate limit info for the given token."""
+        if token:
+            remaining = resp.headers.get('X-RateLimit-Remaining')
+            reset = resp.headers.get('X-RateLimit-Reset')
+            if remaining:
+                token_obj = GitHubToken.query.filter_by(token=token).first()
+                if token_obj:
+                    token_obj.rate_limit_remaining = int(remaining)
+                    if reset:
+                        token_obj.rate_limit_reset = datetime.fromtimestamp(int(reset))
+                    db.session.commit()
 
 github_api = GitHubAPI()
 
@@ -172,7 +217,7 @@ class MonitoringService:
         
         for repo in repos:
             try:
-                latest = github_api.get_latest_release(repo.repo_owner, repo.repo_name)
+                latest = github_api.get_latest_release(repo.repo_owner, repo.repo_name, include_prereleases=repo.notify_pre_releases)
                 
                 if latest and latest['tag_name'] != repo.latest_release:
                     # New release detected
@@ -442,6 +487,7 @@ def repositories():
             'latest_release': r.latest_release,
             'latest_release_url': r.latest_release_url,
             'latest_release_body': r.latest_release_body,
+            'notify_pre_releases': r.notify_pre_releases,
             'last_checked': r.last_checked.isoformat() if r.last_checked else None,
             'added_at': r.added_at.isoformat()
         } for r in repos])
@@ -487,6 +533,19 @@ def repositories():
         db.session.commit()
         
         return jsonify({'message': 'Repository added', 'id': repo.id}), 201
+
+@app.route('/api/repositories/<int:repo_id>/pre-releases', methods=['PUT'])
+@login_required
+def toggle_pre_releases(repo_id):
+    repo = Repository.query.filter_by(id=repo_id, user_id=session['user_id']).first()
+    if not repo:
+        return jsonify({'error': 'Repository not found'}), 404
+    
+    data = request.json
+    repo.notify_pre_releases = data.get('enabled', False)
+    db.session.commit()
+    
+    return jsonify({'message': 'Pre-release setting updated', 'notify_pre_releases': repo.notify_pre_releases})
 
 @app.route('/api/repositories/<int:repo_id>', methods=['DELETE'])
 @login_required
@@ -749,6 +808,12 @@ if __name__ == '__main__':
                 if 'latest_release_body' not in columns:
                     print("Migrating database: Adding latest_release_body column...")
                     conn.execute(text("ALTER TABLE repository ADD COLUMN latest_release_body TEXT"))
+                    conn.commit()
+                    print("Migration complete!")
+                
+                if 'notify_pre_releases' not in columns:
+                    print("Migrating database: Adding notify_pre_releases column...")
+                    conn.execute(text("ALTER TABLE repository ADD COLUMN notify_pre_releases BOOLEAN DEFAULT 0"))
                     conn.commit()
                     print("Migration complete!")
         except Exception as e:

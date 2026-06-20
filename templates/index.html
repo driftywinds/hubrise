@@ -776,6 +776,7 @@
                 <div class="repo-controls">
                     <input type="text" id="repoSearch" placeholder="Search repositories..." oninput="filterAndSortRepositories()">
                     <select id="sortBy" onchange="filterAndSortRepositories()">
+                        <option value="added">Sort by Date Added</option>
                         <option value="name">Sort by Name</option>
                         <option value="release">Sort by Latest Release</option>
                         <option value="checked">Sort by Last Checked</option>
@@ -1170,6 +1171,10 @@
                     const dateA = a.last_checked ? new Date(a.last_checked) : new Date(0);
                     const dateB = b.last_checked ? new Date(b.last_checked) : new Date(0);
                     comparison = dateB - dateA;
+                } else if (sortBy === 'added') {
+                    const dateA = a.added_at ? new Date(a.added_at) : new Date(0);
+                    const dateB = b.added_at ? new Date(b.added_at) : new Date(0);
+                    comparison = dateA - dateB;
                 }
                 
                 return sortAscending ? comparison : -comparison;
@@ -1196,12 +1201,21 @@
                         <div class="list-item-title">
                             ${r.repo_owner}/${r.repo_name}
                             ${r.latest_release ? `<span class="badge success">${r.latest_release}</span>` : ''}
+
                         </div>
                         <div class="list-item-meta">
                             ${r.latest_release_url ? `<a href="${r.latest_release_url}" target="_blank" style="color: var(--primary-color);">View Latest Release</a> • ` : ''}
                             Last checked: ${formatLocalDateTime(r.last_checked)}
                         </div>
                         ${r.latest_release_body ? `<div class="release-body">${escapeHtml(r.latest_release_body.substring(0, 200))}${r.latest_release_body.length > 200 ? '...' : ''}</div>` : ''}
+                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #666; margin: 0;">
+                                <input type="checkbox" ${r.notify_pre_releases ? 'checked' : ''} 
+                                    onchange="togglePreReleases(${r.id}, this.checked)"
+                                    style="width: auto; margin: 0;">
+                                Include pre-releases
+                            </label>
+                        </div>
                     </div>
                     <div class="list-item-actions">
                         <button class="danger small" onclick="deleteRepository(${r.id})">Delete</button>
@@ -1251,6 +1265,30 @@
             
             await fetch(`/api/repositories/${id}`, {method: 'DELETE'});
             loadRepositories();
+        }
+        
+        async function togglePreReleases(repoId, enabled) {
+            try {
+                const resp = await fetch(`/api/repositories/${repoId}/pre-releases`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({enabled: enabled})
+                });
+                
+                if (resp.ok) {
+                    // Update local data
+                    const repo = allRepositories.find(r => r.id === repoId);
+                    if (repo) {
+                        repo.notify_pre_releases = enabled;
+                    }
+                } else {
+                    showMessage('repoMessage', 'Error updating pre-release setting');
+                    loadRepositories();
+                }
+            } catch (e) {
+                showMessage('repoMessage', 'Error updating pre-release setting');
+                loadRepositories();
+            }
         }
         
         async function loadEndpoints() {
