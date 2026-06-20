@@ -5,1725 +5,212 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hubrise - GitHub Release Monitor</title>
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/driftywinds/hubrise/refs/heads/main/assets/icon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50:'#eef5fb',100:'#d4e6f5',200:'#a8cceb',300:'#7db2e0',400:'#4f90c2',500:'#4277a1',600:'#296da3',700:'#1e5078',800:'#0f2d47',900:'#091824',950:'#041524' }
+                    },
+                    fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','SF Pro Display','SF Pro Text','system-ui','Segoe UI','Roboto','Helvetica Neue','Arial','sans-serif'] },
+                    animation: { 'fade-in':'fadeIn 0.3s ease-out','slide-up':'slideUp 0.35s cubic-bezier(0.16,1,0.3,1)' },
+                    keyframes: { fadeIn:{'0%':{opacity:'0'},'100%':{opacity:'1'}}, slideUp:{'0%':{opacity:'0',transform:'translateY(12px)'},'100%':{opacity:'1',transform:'translateY(0)'}} }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary-color: #4f90c2;
-            --primary-hover: #4277a1;
-            --secondary-color: #296da3;
-            --secondary-hover: #1e5078;
-            --danger-color: #dc3545;
-            --danger-hover: #c82333;
-            --success-color: #28a745;
-            --background-gradient-start: #091824;
-            --background-gradient-end: #041524;
-            
-            /* Design Language: Slightly rounded squares */
-            --radius-container: 8px;
-            --radius-element: 6px;
-            --radius-small: 4px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%);
-            min-height: 100vh;
-            padding: 12px;
-        }
-
-        @media (min-width: 768px) {
-            body {
-                padding: 20px;
-            }
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* --- Auth Styles --- */
-        .auth-container {
-            max-width: 420px;
-            margin: 60px auto;
-            background: white;
-            padding: 32px 24px;
-            border-radius: var(--radius-container);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-
-        @media (min-width: 768px) {
-            .auth-container {
-                margin: 100px auto;
-                padding: 40px;
-            }
-        }
-
-        /* --- Header & Cards --- */
-        .main-header {
-            background: white;
-            padding: 20px;
-            border-radius: var(--radius-container);
-            margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-        }
-
-        @media (min-width: 768px) {
-            .main-header {
-                padding: 24px 28px;
-                margin-bottom: 24px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-        }
-
-        .header-content {
-            margin-bottom: 16px;
-        }
-
-        @media (min-width: 768px) {
-            .header-content {
-                margin-bottom: 0;
-            }
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 28px;
-            }
-        }
-
-        h2 {
-            color: var(--primary-color);
-            margin-bottom: 24px;
-            font-size: 22px;
-            font-weight: 600;
-        }
-
-        h3 {
-            color: #333;
-            margin-bottom: 16px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: var(--radius-container);
-            margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-
-        @media (min-width: 768px) {
-            .card {
-                padding: 28px;
-                margin-bottom: 20px;
-            }
-        }
-
-        /* --- Forms & Buttons --- */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e8e8e8;
-            border-radius: var(--radius-element);
-            font-size: 15px;
-            font-family: inherit;
-            transition: all 0.2s;
-            background: #fafafa;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            background: white;
-        }
-
-        button {
-            background: var(--primary-color);
-            color: white;
-            padding: 14px 24px;
-            border: none;
-            border-radius: var(--radius-element);
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            width: 100%;
-        }
-
-        @media (min-width: 768px) {
-            button {
-                width: auto;
-            }
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button:hover {
-            background: var(--primary-hover);
-        }
-
-        button.secondary {
-            background: var(--secondary-color);
-        }
-
-        button.secondary:hover {
-            background: var(--secondary-hover);
-        }
-
-        button.danger {
-            background: var(--danger-color);
-        }
-
-        button.danger:hover {
-            background: var(--danger-hover);
-        }
-
-        button.small {
-            padding: 10px 16px;
-            font-size: 13px;
-            width: auto;
-        }
-        
-        button.text-only {
-            background: transparent;
-            color: var(--primary-color);
-            padding: 0;
-            width: auto;
-            font-weight: normal;
-        }
-        button.text-only:hover {
-            text-decoration: underline;
-        }
-
-        /* --- List Items --- */
-        .list-item {
-            background: #bad9f5;
-            padding: 16px;
-            border-radius: var(--radius-element);
-            margin-bottom: 12px;
-        }
-
-        @media (min-width: 768px) {
-            .list-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-            }
-        }
-
-        .list-item-content {
-            flex: 1;
-            margin-bottom: 12px;
-            /* Ensures flex child shrinks properly for wrapping */
-            min-width: 0; 
-        }
-
-        @media (min-width: 768px) {
-            .list-item-content {
-                margin-bottom: 0;
-            }
-        }
-
-        .list-item-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 6px;
-            font-size: 15px;
-            /* Prevent title from overflowing */
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-
-        .list-item-meta {
-            font-size: 13px;
-            color: #888;
-            line-height: 1.5;
-            /* Prevent meta urls from overflowing */
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-
-        .list-item-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: var(--radius-small);
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-
-        .badge.admin {
-            background: #ffc107;
-            color: #000;
-        }
-
-        .badge.success {
-            background: var(--success-color);
-            color: white;
-        }
-
-        .message {
-            padding: 14px;
-            border-radius: var(--radius-element);
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .message.error {
-            background: #fee;
-            color: #c33;
-            border: 2px solid #fcc;
-        }
-
-        .message.success {
-            background: #efe;
-            color: #363;
-            border: 2px solid #cec;
-        }
-
-        /* --- MOBILE MENU & TABS --- */
-        .mobile-menu-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1010;
-            background: white;
-            border: none;
-            border-radius: var(--radius-element);
-            width: 48px;
-            height: 48px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            transition: transform 0.2s, background 0.2s;
-        }
-        
-        .mobile-menu-toggle:active {
-            transform: scale(0.95);
-        }
-        
-        .hamburger-icon {
-            width: 20px;
-            height: 14px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-        }
-        
-        .hamburger-icon span {
-            width: 100%;
-            height: 2px;
-            background: #333;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
-        
-        .mobile-menu-toggle.active .hamburger-icon span:nth-child(1) {
-            transform: translateY(6px) rotate(45deg);
-        }
-        .mobile-menu-toggle.active .hamburger-icon span:nth-child(2) {
-            opacity: 0;
-        }
-        .mobile-menu-toggle.active .hamburger-icon span:nth-child(3) {
-            transform: translateY(-6px) rotate(-45deg);
-        }
-        
-        .mobile-menu-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px);
-            z-index: 998;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .mobile-menu-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        @media (max-width: 767px) {
-            .tabs {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 280px;
-                height: 100vh;
-                background: white;
-                flex-direction: column;
-                padding: 90px 16px 20px;
-                margin: 0;
-                box-shadow: 4px 0 24px rgba(0,0,0,0.15);
-                z-index: 999;
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                transform: translateX(-100%);
-                visibility: hidden;
-                overflow-y: auto;
-            }
-            
-            .tabs.active {
-                transform: translateX(0);
-                visibility: visible;
-            }
-            
-            .tab {
-                width: 100%;
-                text-align: left;
-                padding: 16px 20px;
-                background: transparent;
-                border-radius: var(--radius-element);
-                color: #555;
-                font-size: 15px;
-                border: 1px solid transparent;
-                margin-bottom: 4px;
-                transition: all 0.2s;
-                white-space: normal;
-            }
-            
-            .tab:hover {
-                background: #f8f9fa;
-            }
-            
-            .tab.active {
-                background: rgba(79, 144, 194, 0.1);
-                color: var(--primary-color);
-                font-weight: 600;
-            }
-            
-            .main-header {
-                margin-top: 60px;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .mobile-menu-toggle {
-                display: none;
-            }
-            
-            .tabs {
-                margin-bottom: 20px;
-                overflow-x: auto;
-            }
-            
-            .tab {
-                padding: 12px 20px;
-                background: rgba(255, 255, 255, 0.9);
-                border: none;
-                border-radius: var(--radius-element);
-                cursor: pointer;
-                font-weight: 600;
-                color: #666;
-                font-size: 14px;
-                white-space: nowrap;
-                flex-shrink: 0;
-                transition: all 0.2s;
-            }
-            
-            .tab.active {
-                background: white;
-                color: var(--primary-color);
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            }
-        }
-        
-        /* --- Utility --- */
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-            font-size: 15px;
-        }
-
-        .flex {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .user-info {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .repo-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: stretch;
-        }
-
-        .repo-controls input[type="text"] {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .repo-controls select {
-            flex: 1;
-            min-width: 160px;
-        }
-
-        @media (min-width: 768px) {
-            .repo-controls select {
-                flex: 0;
-                min-width: 180px;
-            }
-        }
-
-        .sort-toggle {
-            background: #fafafa;
-            border: 2px solid #e8e8e8;
-            padding: 14px 20px;
-            border-radius: var(--radius-element);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.2s;
-            flex: 1;
-            min-width: 140px;
-            text-align: center;
-        }
-
-        @media (min-width: 768px) {
-            .sort-toggle {
-                flex: 0;
-                min-width: auto;
-            }
-        }
-
-        .sort-toggle:active {
-            transform: scale(0.98);
-        }
-
-        .sort-toggle:hover {
-            background: #e9ecef;
-        }
-
-        .sort-toggle.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        small {
-            font-size: 13px;
-        }
-
-        .release-body {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #666;
-            line-height: 1.5;
-            padding: 12px;
-            background: white;
-            border-radius: var(--radius-element);
-            /* Fix overflow issues on mobile */
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-        }
-
-        @media (max-width: 767px) {
-            .header-actions {
-                width: 100%;
-                margin-top: 12px;
-            }
-            .header-actions button {
-                flex: 1;
-            }
-            
-            input[type="checkbox"] {
-                width: 20px !important;
-                height: 20px;
-                margin-right: 10px !important;
-            }
-        }
-
-        /* Sub-tabs for Endpoints */
-        .endpoint-type-toggle {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-        
-        .endpoint-type-btn {
-            background: transparent;
-            color: #666;
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid transparent;
-            font-size: 14px;
-            cursor: pointer;
-            width: auto;
-        }
-        
-        .endpoint-type-btn:hover {
-            background: #f0f0f0;
-        }
-        
-        .endpoint-type-btn.active {
-            background: #e1f0fa;
-            color: var(--primary-color);
-            border-color: #d0e5f5;
-            font-weight: 600;
-        }
-
-        /* Modal Styles */
-        .modal-overlay-bg {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-overlay-bg.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 24px;
-            border-radius: var(--radius-container);
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-        }
-        
-        .close-modal {
-            background: transparent;
-            color: #666;
-            font-size: 24px;
-            padding: 0;
-            width: auto;
-            line-height: 1;
-        }
-        
-        .close-modal:hover {
-            background: transparent;
-            color: #333;
-        }
-        
-        .settings-option {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .settings-option:last-child {
-            border-bottom: none;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:linear-gradient(160deg,#0c1f30 0%,#061420 50%,#030d17 100%); min-height:100vh; -webkit-font-smoothing:antialiased; }
+        .glass { background:rgba(255,255,255,0.06); backdrop-filter:blur(40px) saturate(180%); -webkit-backdrop-filter:blur(40px) saturate(180%); border:1px solid rgba(255,255,255,0.08); border-radius:20px; transition:all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        .glass:hover { border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.08); }
+        .glass-light { background:rgba(255,255,255,0.95); backdrop-filter:blur(40px) saturate(180%); border:1px solid rgba(255,255,255,0.2); border-radius:20px; box-shadow:0 0 0 1px rgba(0,0,0,0.03),0 2px 4px rgba(0,0,0,0.04),0 12px 40px rgba(0,0,0,0.08); }
+        .auth-card { background:rgba(255,255,255,0.97); backdrop-filter:blur(60px) saturate(200%); border:1px solid rgba(255,255,255,0.3); border-radius:24px; box-shadow:0 0 0 1px rgba(0,0,0,0.02),0 4px 8px rgba(0,0,0,0.04),0 24px 80px rgba(0,0,0,0.2); }
+        .input-apple { width:100%; padding:14px 18px; background:rgba(0,0,0,0.04); border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; font-size:15px; font-family:inherit; transition:all 0.2s ease; color:#1d1d1f; }
+        .input-apple:focus { outline:none; border-color:#4f90c2; background:white; box-shadow:0 0 0 4px rgba(79,144,194,0.12); }
+        .input-apple::placeholder { color:#a1a1a6; }
+        .input-glass { width:100%; padding:14px 18px; background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.1); border-radius:14px; font-size:15px; font-family:inherit; transition:all 0.2s ease; color:#f5f5f7; }
+        .input-glass:focus { outline:none; border-color:#4f90c2; background:rgba(255,255,255,0.1); box-shadow:0 0 0 4px rgba(79,144,194,0.15); }
+        .input-glass::placeholder { color:rgba(255,255,255,0.3); }
+        select.input-glass { -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 16px center; padding-right:44px; cursor:pointer; }
+        .btn-primary { padding:14px 28px; background:linear-gradient(135deg,#4f90c2,#296da3); color:white; border:none; border-radius:14px; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.2s cubic-bezier(0.16,1,0.3,1); font-family:inherit; width:100%; box-shadow:0 2px 8px rgba(41,109,163,0.3),inset 0 1px 0 rgba(255,255,255,0.15); }
+        .btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(41,109,163,0.4),inset 0 1px 0 rgba(255,255,255,0.15); }
+        .btn-primary:active { transform:scale(0.98) translateY(0); }
+        .btn-glass { padding:14px 28px; background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:14px; font-size:15px; font-weight:500; cursor:pointer; transition:all 0.2s cubic-bezier(0.16,1,0.3,1); font-family:inherit; width:100%; backdrop-filter:blur(20px); }
+        .btn-glass:hover { background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.18); transform:translateY(-1px); }
+        .btn-glass:active { transform:scale(0.98); }
+        .btn-danger { padding:14px 28px; background:linear-gradient(135deg,#ff453a,#dc3545); color:white; border:none; border-radius:14px; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.2s cubic-bezier(0.16,1,0.3,1); font-family:inherit; width:100%; box-shadow:0 2px 8px rgba(220,53,69,0.3),inset 0 1px 0 rgba(255,255,255,0.15); }
+        .btn-danger:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(220,53,69,0.4); }
+        .btn-danger:active { transform:scale(0.98); }
+        .btn-sm { padding:8px 16px; font-size:13px; border-radius:10px; width:auto; }
+        .list-item { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); padding:20px; border-radius:16px; margin-bottom:10px; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); list-style:none; }
+        .list-item::before, .list-item::after { content:none !important; }
+        .list-item:hover { background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.1); transform:translateY(-1px); }
+        .release-body { margin-top:10px; font-size:13px; color:rgba(255,255,255,0.45); line-height:1.6; padding:14px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid rgba(255,255,255,0.04); word-wrap:break-word; overflow-wrap:break-word; word-break:break-word; }
+        .badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:600; }
+        .badge.success { background:linear-gradient(135deg,rgba(40,167,69,0.2),rgba(40,167,69,0.12)); color:#5ed880; border:1px solid rgba(40,167,69,0.2); }
+        .badge.admin { background:linear-gradient(135deg,rgba(255,193,7,0.2),rgba(255,193,7,0.12)); color:#ffd60a; border:1px solid rgba(255,193,7,0.2); }
+        .message { padding:14px 18px; border-radius:14px; margin-bottom:20px; font-size:14px; font-weight:500; }
+        .message.error { background:rgba(255,69,58,0.12); color:#ff6961; border:1px solid rgba(255,69,58,0.2); }
+        .message.success { background:rgba(40,167,69,0.12); color:#5ed880; border:1px solid rgba(40,167,69,0.2); }
+        .tab { padding:12px 22px; background:transparent; border:none; border-radius:12px; cursor:pointer; font-weight:500; color:rgba(255,255,255,0.4); font-size:14px; white-space:nowrap; flex-shrink:0; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); font-family:inherit; }
+        .tab:hover { color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.04); }
+        .tab.active { background:rgba(255,255,255,0.1); color:#4f90c2; font-weight:600; box-shadow:0 0 0 1px rgba(79,144,194,0.15); }
+        .sort-toggle { background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.1); padding:14px 20px; border-radius:14px; cursor:pointer; font-size:14px; font-weight:500; color:rgba(255,255,255,0.5); transition:all 0.2s cubic-bezier(0.16,1,0.3,1); flex:1; min-width:140px; text-align:center; font-family:inherit; }
+        .sort-toggle:hover { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); }
+        .sort-toggle.active { background:rgba(79,144,194,0.15); color:#4f90c2; border-color:rgba(79,144,194,0.3); }
+        .endpoint-type-btn { padding:10px 20px; border-radius:20px; border:1.5px solid transparent; font-size:14px; cursor:pointer; width:auto; background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.5); transition:all 0.2s; font-family:inherit; font-weight:500; }
+        .endpoint-type-btn:hover { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); }
+        .endpoint-type-btn.active { background:rgba(79,144,194,0.12); color:#4f90c2; border-color:rgba(79,144,194,0.25); font-weight:600; }
+        .toggle-switch { position:relative; width:44px; height:26px; flex-shrink:0; }
+        .toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+        .toggle-slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.12); border-radius:13px; transition:all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        .toggle-slider:before { position:absolute; content:""; height:20px; width:20px; left:3px; bottom:3px; background:white; border-radius:50%; transition:all 0.3s cubic-bezier(0.16,1,0.3,1); box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+        .toggle-switch input:checked + .toggle-slider { background:#4f90c2; }
+        .toggle-switch input:checked + .toggle-slider:before { transform:translateX(18px); }
+        .modal-overlay-bg { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:2000; align-items:center; justify-content:center; }
+        .modal-overlay-bg.active { display:flex; }
+        .modal-content { background:rgba(30,30,35,0.95); backdrop-filter:blur(60px) saturate(200%); padding:32px; border-radius:24px; width:90%; max-width:420px; border:1px solid rgba(255,255,255,0.1); box-shadow:0 24px 80px rgba(0,0,0,0.5); }
+        .mobile-menu-toggle { display:none; position:fixed; top:20px; left:20px; z-index:1010; background:rgba(30,30,35,0.8); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:14px; width:48px; height:48px; cursor:pointer; align-items:center; justify-content:center; transition:all 0.2s; }
+        .mobile-menu-toggle:active { transform:scale(0.95); }
+        .hamburger-icon { width:18px; height:12px; display:flex; flex-direction:column; justify-content:space-between; }
+        .hamburger-icon span { width:100%; height:2px; background:rgba(255,255,255,0.7); border-radius:2px; transition:all 0.3s ease; }
+        .mobile-menu-toggle.active .hamburger-icon span:nth-child(1) { transform:translateY(5px) rotate(45deg); }
+        .mobile-menu-toggle.active .hamburger-icon span:nth-child(2) { opacity:0; }
+        .mobile-menu-toggle.active .hamburger-icon span:nth-child(3) { transform:translateY(-5px) rotate(-45deg); }
+        .mobile-menu-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:998; }
+        .mobile-menu-overlay.active { display:block; }
+        @media (max-width:767px) { .mobile-menu-toggle { display:flex; } .tabs { position:fixed; top:0; left:0; width:280px; height:100vh; background:rgba(15,15,20,0.97); backdrop-filter:blur(40px); flex-direction:column; padding:90px 16px 20px; margin:0; box-shadow:4px 0 40px rgba(0,0,0,0.4); z-index:999; transition:transform 0.35s cubic-bezier(0.16,1,0.3,1); transform:translateX(-100%); visibility:hidden; overflow-y:auto; gap:4px; } .tabs.active { transform:translateX(0); visibility:visible; } .main-header { margin-top:70px; } .header-actions { width:100%; margin-top:12px; } .header-actions button { flex:1; } input[type="checkbox"] { width:18px !important; height:18px; } }
+        ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
+        .hidden { display:none !important; } .tab-content { display:none; } .tab-content.active { display:block; } .empty-state { text-align:center; padding:48px 24px; color:rgba(255,255,255,0.25); font-size:15px; } small { font-size:13px; }
+        .label-apple { display:block; margin-bottom:8px; color:rgba(255,255,255,0.55); font-weight:500; font-size:14px; }
     </style>
 </head>
-<body>
-    <div id="authContainer" class="auth-container">
-        <h2>Hubrise - GitHub Release Monitor</h2>
-        <div id="authMessage"></div>
-        
-        <div id="loginForm">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="loginUsername" placeholder="Enter username" onkeypress="handleLoginKeypress(event)">
+<body class="font-sans">
+    <div id="authContainer" class="max-w-md mx-auto mt-16 md:mt-28 px-4">
+        <div class="auth-card p-8 md:p-10 animate-fade-in">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 mb-5 shadow-lg shadow-brand-500/20"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg></div>
+                <h2 class="text-2xl font-semibold text-gray-900 tracking-tight">Hubrise</h2>
+                <p class="text-sm text-gray-400 mt-1">GitHub Release Monitor</p>
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter password" onkeypress="handleLoginKeypress(event)">
+            <div id="authMessage"></div>
+            <div id="loginForm">
+                <div class="mb-5"><label class="text-sm font-medium text-gray-600 mb-2 block">Username</label><input type="text" id="loginUsername" class="input-apple" placeholder="Enter username" onkeypress="handleLoginKeypress(event)"></div>
+                <div class="mb-6"><label class="text-sm font-medium text-gray-600 mb-2 block">Password</label><input type="password" id="loginPassword" class="input-apple" placeholder="Enter password" onkeypress="handleLoginKeypress(event)"></div>
+                <button onclick="login()" class="btn-primary mb-3">Sign In</button>
+                <button id="createAccountBtn" onclick="showRegister()" class="w-full py-3.5 px-6 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all cursor-pointer bg-transparent border-none">Create Account</button>
             </div>
-            <button onclick="login()" style="margin-bottom: 10px;">Login</button>
-            <button id="createAccountBtn" onclick="showRegister()" class="secondary">Create Account</button>
-        </div>
-        
-        <div id="registerForm" class="hidden">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="regUsername" placeholder="Choose username" onkeypress="handleRegisterKeypress(event)">
+            <div id="registerForm" class="hidden">
+                <div class="mb-5"><label class="text-sm font-medium text-gray-600 mb-2 block">Username</label><input type="text" id="regUsername" class="input-apple" placeholder="Choose username" onkeypress="handleRegisterKeypress(event)"></div>
+                <div class="mb-6"><label class="text-sm font-medium text-gray-600 mb-2 block">Password</label><input type="password" id="regPassword" class="input-apple" placeholder="Choose password" onkeypress="handleRegisterKeypress(event)"></div>
+                <button onclick="register()" class="btn-primary mb-3">Create Account</button>
+                <button onclick="showLogin()" class="w-full py-3.5 px-6 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all cursor-pointer bg-transparent border-none">Back to Sign In</button>
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="regPassword" placeholder="Choose password" onkeypress="handleRegisterKeypress(event)">
-            </div>
-            <button onclick="register()" style="margin-bottom: 10px;">Register</button>
-            <button onclick="showLogin()" class="secondary">Back to Login</button>
         </div>
     </div>
-    
-    <div id="appContainer" class="container hidden">
-        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
-            <div class="hamburger-icon">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </button>
+    <div id="appContainer" class="max-w-5xl mx-auto px-4 pb-12 hidden">
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu"><div class="hamburger-icon"><span></span><span></span><span></span></div></button>
         <div class="mobile-menu-overlay" onclick="closeMobileMenu()"></div>
-    
-        <div class="main-header">
-            <div class="header-content">
-                <h1>Hubrise</h1>
-                <div class="user-info">
-                    Logged in as: <strong id="currentUser"></strong>
-                </div>
-            </div>
-            <div class="header-actions">
-                <button onclick="openSettings()" class="secondary">Settings</button>
-                <button onclick="logout()">Logout</button>
+        <div class="glass-light p-5 md:p-6 mb-6 mt-0 md:mt-8 animate-fade-in">
+            <div class="md:flex md:justify-between md:items-center">
+                <div class="mb-4 md:mb-0"><h1 class="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">Hubrise</h1><p class="text-sm text-gray-400 mt-1">Signed in as <strong id="currentUser" class="text-gray-600"></strong></p></div>
+                <div class="flex gap-3 flex-wrap"><button onclick="openSettings()" class="py-2.5 px-5 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 border-none cursor-pointer transition-all" style="width:auto;">Settings</button><button onclick="logout()" class="py-2.5 px-5 rounded-xl text-sm font-medium text-red-500 hover:text-white hover:bg-red-500 bg-transparent border border-red-200 hover:border-red-500 cursor-pointer transition-all" style="width:auto;">Logout</button></div>
             </div>
         </div>
-        
-        <div class="tabs">
+        <div class="tabs flex gap-2 mb-5 overflow-x-auto pb-1">
             <button class="tab active" onclick="switchTab('repositories')">My Repositories</button>
             <button class="tab" onclick="switchTab('endpoints')">Notification Endpoints</button>
             <button class="tab" id="adminTabButton" onclick="switchTab('admin')" style="display: none;">Admin Settings</button>
         </div>
-        
         <div id="repositoriesTab" class="tab-content active">
-            <div class="card">
-                <h3>Add Repository</h3>
+            <div class="glass p-6 md:p-8 mb-5 animate-slide-up">
+                <h3 class="text-lg font-semibold text-white mb-5 tracking-tight">Add Repository</h3>
                 <div id="repoMessage"></div>
-                <div class="form-group">
-                    <label>GitHub Repository URL</label>
-                    <input type="text" id="repoUrl" placeholder="https://github.com/owner/repo">
-                </div>
-                <button onclick="addRepository()">Add Repository</button>
+                <div class="flex gap-3 flex-col sm:flex-row"><input type="text" id="repoUrl" class="input-glass flex-1 min-w-0" placeholder="https://github.com/owner/repo"><button onclick="addRepository()" class="btn-primary sm:w-auto whitespace-nowrap" style="width:auto;">Add Repository</button></div>
             </div>
-            
-            <div class="card">
-                <h3>Monitored Repositories</h3>
-                <div class="repo-controls">
-                    <input type="text" id="repoSearch" placeholder="Search repositories..." oninput="filterAndSortRepositories()">
-                    <select id="sortBy" onchange="filterAndSortRepositories()">
-                        <option value="added">Sort by Date Added</option>
-                        <option value="name">Sort by Name</option>
-                        <option value="release">Sort by Latest Release</option>
-                        <option value="checked">Sort by Last Checked</option>
-                    </select>
-                    <button class="sort-toggle" id="sortOrderToggle" onclick="toggleSortOrder()">
-                        ↓ Descending
-                    </button>
-                </div>
+            <div class="glass p-6 md:p-8 animate-slide-up" style="animation-delay:0.05s;">
+                <h3 class="text-lg font-semibold text-white mb-5 tracking-tight">Monitored Repositories</h3>
+                <div class="flex gap-3 mb-5 flex-col sm:flex-row"><input type="text" id="repoSearch" class="input-glass flex-1 min-w-0" placeholder="Search repositories..." oninput="filterAndSortRepositories()"><select id="sortBy" class="input-glass sm:w-48" onchange="filterAndSortRepositories()"><option value="added">Sort by Date Added</option><option value="name">Sort by Name</option><option value="release">Sort by Latest Release</option><option value="checked">Sort by Last Checked</option></select><button class="sort-toggle" id="sortOrderToggle" onclick="toggleSortOrder()">&#x2193; Descending</button></div>
                 <div id="repositoriesList"></div>
             </div>
         </div>
-        
         <div id="endpointsTab" class="tab-content">
-            <div class="card">
-                <h3>Add Endpoint</h3>
+            <div class="glass p-6 md:p-8 mb-5 animate-slide-up">
+                <h3 class="text-lg font-semibold text-white mb-5 tracking-tight">Add Endpoint</h3>
                 <div id="endpointMessage"></div>
-                
-                <div class="endpoint-type-toggle" id="endpointTypeToggle" style="display: none;">
-                    <button class="endpoint-type-btn active" onclick="toggleEndpointType('custom')" id="btnTypeCustom">Custom URL</button>
-                    <button class="endpoint-type-btn" onclick="toggleEndpointType('telegram')" id="btnTypeTelegram">Hubrise Telegram Bot (@hubrise_bot)</button>
-                </div>
-
-                <div class="form-group">
-                    <label>Endpoint Name (Optional)</label>
-                    <input type="text" id="endpointName" placeholder="My Notifications">
-                </div>
-                
-                <div id="formTypeCustom">
-                    <div class="form-group">
-                        <label>Apprise URL</label>
-                        <input type="text" id="endpointUrl" placeholder="discord://webhook_id/webhook_token">
-                        <small style="color: #666; display: block; margin-top: 5px;">
-                            Examples: discord://..., slack://..., mailto://..., telegram://...
-                        </small>
-                    </div>
-                    <button onclick="addEndpoint()">Add Custom Endpoint</button>
-                </div>
-
-                <div id="formTypeTelegram" style="display: none;">
-                    <div class="form-group">
-                        <label>Telegram Chat ID</label>
-                        <input type="text" id="telegramChatId" placeholder="123456789">
-                        <small style="color: #666; display: block; margin-top: 5px;">
-                            Please /start a chat with <a href="https://t.me/hubrise_bot" target="_blank" style="color: var(--primary-color);">@hubrise_bot</a> before adding/testing this or it won't work. Don't know your Chat ID? Message <a href="https://t.me/userinfobot" target="_blank" style="color: var(--primary-color);">@userinfobot</a> on Telegram.
-                        </small>
-                    </div>
-                    <button onclick="addTelegramEndpoint()">Add Telegram Bot</button>
-                </div>
+                <div id="endpointTypeToggle" class="flex gap-3 mb-5 pb-4 border-b border-white/5" style="display: none;"><button class="endpoint-type-btn active" onclick="toggleEndpointType('custom')" id="btnTypeCustom">Custom URL</button><button class="endpoint-type-btn" onclick="toggleEndpointType('telegram')" id="btnTypeTelegram">Hubrise Telegram Bot</button></div>
+                <div class="mb-5"><label class="label-apple">Endpoint Name <span class="text-white/20">(optional)</span></label><input type="text" id="endpointName" class="input-glass" placeholder="My Notifications"></div>
+                <div id="formTypeCustom"><div class="mb-5"><label class="label-apple">Apprise URL</label><input type="text" id="endpointUrl" class="input-glass" placeholder="discord://webhook_id/webhook_token"><small class="text-white/30 block mt-2">Examples: discord://..., slack://..., mailto://..., telegram://...</small></div><button onclick="addEndpoint()" class="btn-primary">Add Custom Endpoint</button></div>
+                <div id="formTypeTelegram" style="display: none;"><div class="mb-5"><label class="label-apple">Telegram Chat ID</label><input type="text" id="telegramChatId" class="input-glass" placeholder="123456789"><small class="text-white/30 block mt-2">Please /start a chat with <a href="https://t.me/hubrise_bot" target="_blank" class="text-brand-400 hover:text-brand-300 transition-colors">@hubrise_bot</a> before adding/testing. Don't know your Chat ID? Message <a href="https://t.me/userinfobot" target="_blank" class="text-brand-400 hover:text-brand-300 transition-colors">@userinfobot</a> on Telegram.</small></div><button onclick="addTelegramEndpoint()" class="btn-primary">Add Telegram Bot</button></div>
             </div>
-            
-            <div class="card">
-                <h3>Configured Endpoints</h3>
-                <div id="endpointsList"></div>
-            </div>
+            <div class="glass p-6 md:p-8 animate-slide-up" style="animation-delay:0.05s;"><h3 class="text-lg font-semibold text-white mb-5 tracking-tight">Configured Endpoints</h3><div id="endpointsList"></div></div>
         </div>
-        
         <div id="adminTab" class="tab-content">
-            <div class="card">
-                <h3>Polling Configuration</h3>
-                <div id="adminMessage"></div>
-                <div class="form-group">
-                    <label>Polling Interval (minutes)</label>
-                    <input type="number" id="pollingInterval" min="1" step="1" value="60">
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        Must be a whole number (minimum 1 minute)
-                    </small>
-                </div>
-                <div class="flex">
-                    <button onclick="updatePollingInterval()">Update Interval</button>
-                    <button onclick="pollNow()" class="secondary">Poll Now</button>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h3>Registration Settings</h3>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="registrationsEnabled" onchange="updateRegistrationSettings()" style="width: auto; margin-right: 10px;">
-                        <span>Allow new user registrations</span>
-                    </label>
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        When disabled, only admins can create new users
-                    </small>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h3>User Management</h3>
-                <div id="userManagementMessage"></div>
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="newUsername" placeholder="Enter username">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="newPassword" placeholder="Enter password">
-                </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="newUserAdmin" style="width: auto; margin-right: 10px;">
-                        <span>Make this user an admin</span>
-                    </label>
-                </div>
-                <button onclick="createUser()">Create User</button>
-                <div id="usersList" style="margin-top: 20px;"></div>
-            </div>
-            
-            <div class="card">
-                <h3>GitHub Access Tokens</h3>
-                <div class="form-group">
-                    <label>Add Token</label>
-                    <input type="text" id="githubToken" placeholder="ghp_...">
-                </div>
-                <button onclick="addToken()">Add Token</button>
-                <div id="tokensList" style="margin-top: 20px;"></div>
-            </div>
+            <div class="glass p-6 md:p-8 mb-5 animate-slide-up"><h3 class="text-lg font-semibold text-white mb-5 tracking-tight">Polling Configuration</h3><div id="adminMessage"></div><div class="mb-5"><label class="label-apple">Polling Interval (minutes)</label><input type="number" id="pollingInterval" class="input-glass" min="1" step="1" value="60"><small class="text-white/30 block mt-2">Must be a whole number (minimum 1 minute)</small></div><div class="flex gap-3 flex-col sm:flex-row"><button onclick="updatePollingInterval()" class="btn-primary sm:w-auto" style="width:auto;">Update Interval</button><button onclick="pollNow()" class="btn-glass sm:w-auto" style="width:auto;">Poll Now</button></div></div>
+            <div class="glass p-6 md:p-8 mb-5 animate-slide-up" style="animation-delay:0.05s;"><h3 class="text-lg font-semibold text-white mb-5 tracking-tight">Registration Settings</h3><div class="flex items-center justify-between py-3"><div><p class="text-white/80 text-sm font-medium">Allow new user registrations</p><small class="text-white/30">When disabled, only admins can create new users</small></div><label class="toggle-switch"><input type="checkbox" id="registrationsEnabled" onchange="updateRegistrationSettings()"><span class="toggle-slider"></span></label></div></div>
+            <div class="glass p-6 md:p-8 mb-5 animate-slide-up" style="animation-delay:0.1s;"><h3 class="text-lg font-semibold text-white mb-5 tracking-tight">User Management</h3><div id="userManagementMessage"></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div><label class="label-apple">Username</label><input type="text" id="newUsername" class="input-glass" placeholder="Enter username"></div><div><label class="label-apple">Password</label><input type="password" id="newPassword" class="input-glass" placeholder="Enter password"></div></div><div class="flex items-center gap-3 mb-5"><label class="toggle-switch"><input type="checkbox" id="newUserAdmin"><span class="toggle-slider"></span></label><span class="text-white/60 text-sm">Make this user an admin</span></div><button onclick="createUser()" class="btn-primary mb-6">Create User</button><div id="usersList"></div></div>
+            <div class="glass p-6 md:p-8 animate-slide-up" style="animation-delay:0.15s;"><h3 class="text-lg font-semibold text-white mb-5 tracking-tight">GitHub Access Tokens</h3><div class="mb-4"><label class="label-apple">Add Token</label><input type="text" id="githubToken" class="input-glass" placeholder="ghp_..."></div><button onclick="addToken()" class="btn-primary">Add Token</button><div id="tokensList" class="mt-5"></div></div>
         </div>
     </div>
-    
     <div id="settingsModal" class="modal-overlay-bg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Settings</h3>
-                <button class="close-modal" onclick="closeSettings()">&times;</button>
-            </div>
-            <div class="settings-group">
-                <div class="settings-option">
-                    <label for="timeFormatToggle" style="margin: 0; cursor: pointer;">Use 24-hour time format</label>
-                    <input type="checkbox" id="timeFormatToggle" onchange="saveSettings()" style="width: auto;">
-                </div>
-            </div>
-            <div style="margin-top: 20px; text-align: right;">
-                <button onclick="closeSettings()" class="secondary small">Close</button>
-            </div>
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-semibold text-white tracking-tight">Settings</h3><button onclick="closeSettings()" class="text-white/40 hover:text-white/80 bg-transparent border-none text-2xl cursor-pointer leading-none transition-colors" style="width:auto;padding:0;">&times;</button></div>
+            <div class="flex items-center justify-between py-4 border-b border-white/8"><label for="timeFormatToggle" class="text-white/70 text-sm cursor-pointer m-0">Use 24-hour time format</label><label class="toggle-switch"><input type="checkbox" id="timeFormatToggle" onchange="saveSettings()"><span class="toggle-slider"></span></label></div>
+            <div class="mt-6 text-right"><button onclick="closeSettings()" class="btn-glass sm:w-auto" style="width:auto;">Close</button></div>
         </div>
     </div>
-    
     <script>
-        let currentUser = null;
-        let isAdmin = false;
-        let allRepositories = [];
-        let sortAscending = false;
-        let telegramEnabled = false;
-        
-        // Initialize settings from localStorage
-        let use24HourTime = localStorage.getItem('use24HourTime') === 'true';
-        
-        function formatLocalDateTime(isoString) {
-            if (!isoString || isoString === 'Never') return 'Never';
-            
-            // Fix UTC parsing: if string doesn't have Z or + offset, append Z to force UTC interpretation
-            if (isoString.indexOf('Z') === -1 && isoString.indexOf('+') === -1) {
-                isoString += 'Z';
-            }
-            
-            const date = new Date(isoString);
-            
-            return date.toLocaleString(undefined, {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: !use24HourTime
-            });
-        }
-        
-        // Settings Functions
-        function openSettings() {
-            document.getElementById('timeFormatToggle').checked = use24HourTime;
-            document.getElementById('settingsModal').classList.add('active');
-        }
-        
-        function closeSettings() {
-            document.getElementById('settingsModal').classList.remove('active');
-        }
-        
-        function saveSettings() {
-            use24HourTime = document.getElementById('timeFormatToggle').checked;
-            localStorage.setItem('use24HourTime', use24HourTime);
-            
-            // Refresh views to show new time format
-            filterAndSortRepositories();
-            if (isAdmin && document.getElementById('adminTab').classList.contains('active')) {
-                loadUsers(); // Refresh user list dates
-            }
-        }
-        
-        window.onload = async () => {
-            await checkRegistrationStatus();
-            
-            try {
-                const resp = await fetch('/api/user');
-                if (resp.ok) {
-                    const data = await resp.json();
-                    currentUser = data.username;
-                    isAdmin = data.is_admin;
-                    telegramEnabled = data.telegram_bot_configured;
-                    showApp();
-                }
-            } catch (e) {
-                // Not logged in
-            }
-        };
-        
-        async function checkRegistrationStatus() {
-            try {
-                const resp = await fetch('/api/config/registrations-enabled');
-                const data = await resp.json();
-                
-                const createBtn = document.getElementById('createAccountBtn');
-                if (!data.enabled) {
-                    createBtn.style.display = 'none';
-                }
-            } catch (e) {
-                console.error('Error checking registration status:', e);
-            }
-        }
-        
-        function showMessage(elementId, message, type = 'error') {
-            const el = document.getElementById(elementId);
-            el.innerHTML = `<div class="message ${type}">${message}</div>`;
-            setTimeout(() => el.innerHTML = '', 5000);
-        }
-        
-        function showLogin() {
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('registerForm').classList.add('hidden');
-        }
-        
-        function showRegister() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('registerForm').classList.remove('hidden');
-        }
-        
-        function handleLoginKeypress(event) {
-            if (event.key === 'Enter') {
-                login();
-            }
-        }
-        
-        function handleRegisterKeypress(event) {
-            if (event.key === 'Enter') {
-                register();
-            }
-        }
-        
-        async function login() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            try {
-                const resp = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({username, password})
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    currentUser = data.username;
-                    isAdmin = data.is_admin;
-                    showApp();
-                    // Need to reload user data to check telegram status
-                    const userResp = await fetch('/api/user');
-                    const userData = await userResp.json();
-                    telegramEnabled = userData.telegram_bot_configured;
-                    setupEndpointUI(); 
-                } else {
-                    showMessage('authMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('authMessage', 'Connection error');
-            }
-        }
-        
-        async function register() {
-            const username = document.getElementById('regUsername').value;
-            const password = document.getElementById('regPassword').value;
-            
-            try {
-                const resp = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({username, password})
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('authMessage', 'Account created! Please login.', 'success');
-                    showLogin();
-                } else {
-                    showMessage('authMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('authMessage', 'Connection error');
-            }
-        }
-        
-        async function logout() {
-            await fetch('/api/logout', {method: 'POST'});
-            location.reload();
-        }
-        
-        function showApp() {
-            document.getElementById('authContainer').classList.add('hidden');
-            document.getElementById('appContainer').classList.remove('hidden');
-            document.getElementById('currentUser').textContent = currentUser + (isAdmin ? ' (Admin)' : '');
-            
-            if (isAdmin) {
-                document.getElementById('adminTabButton').style.display = 'block';
-            }
-            
-            setupEndpointUI();
-            loadRepositories();
-            loadEndpoints();
-        }
-        
-        function setupEndpointUI() {
-            if (telegramEnabled) {
-                document.getElementById('endpointTypeToggle').style.display = 'flex';
-            } else {
-                document.getElementById('endpointTypeToggle').style.display = 'none';
-            }
-        }
-        
-        function toggleEndpointType(type) {
-            const btnCustom = document.getElementById('btnTypeCustom');
-            const btnTelegram = document.getElementById('btnTypeTelegram');
-            const formCustom = document.getElementById('formTypeCustom');
-            const formTelegram = document.getElementById('formTypeTelegram');
-            
-            if (type === 'custom') {
-                btnCustom.classList.add('active');
-                btnTelegram.classList.remove('active');
-                formCustom.style.display = 'block';
-                formTelegram.style.display = 'none';
-            } else {
-                btnCustom.classList.remove('active');
-                btnTelegram.classList.add('active');
-                formCustom.style.display = 'none';
-                formTelegram.style.display = 'block';
-            }
-        }
-        
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(tab + 'Tab').classList.add('active');
-            
-            if (tab === 'repositories') loadRepositories();
-            else if (tab === 'endpoints') loadEndpoints();
-            else if (tab === 'admin' && isAdmin) loadAdminSettings();
-        }
-        
-        function toggleSortOrder() {
-            sortAscending = !sortAscending;
-            const toggle = document.getElementById('sortOrderToggle');
-            toggle.textContent = sortAscending ? '↑ Ascending' : '↓ Descending';
-            toggle.classList.toggle('active', sortAscending);
-            filterAndSortRepositories();
-        }
-        
-        function filterAndSortRepositories() {
-            const searchTerm = document.getElementById('repoSearch').value.toLowerCase();
-            const sortBy = document.getElementById('sortBy').value;
-            
-            let filtered = allRepositories.filter(r => {
-                const fullName = `${r.repo_owner}/${r.repo_name}`.toLowerCase();
-                return fullName.includes(searchTerm) || 
-                       (r.latest_release && r.latest_release.toLowerCase().includes(searchTerm));
-            });
-            
-            filtered.sort((a, b) => {
-                let comparison = 0;
-                
-                if (sortBy === 'name') {
-                    const nameA = `${a.repo_owner}/${a.repo_name}`.toLowerCase();
-                    const nameB = `${b.repo_owner}/${b.repo_name}`.toLowerCase();
-                    comparison = nameA.localeCompare(nameB);
-                } else if (sortBy === 'release') {
-                    if (!a.latest_release && !b.latest_release) comparison = 0;
-                    else if (!a.latest_release) comparison = 1;
-                    else if (!b.latest_release) comparison = -1;
-                    else comparison = a.latest_release.localeCompare(b.latest_release);
-                } else if (sortBy === 'checked') {
-                    const dateA = a.last_checked ? new Date(a.last_checked) : new Date(0);
-                    const dateB = b.last_checked ? new Date(b.last_checked) : new Date(0);
-                    comparison = dateB - dateA;
-                } else if (sortBy === 'added') {
-                    const dateA = a.added_at ? new Date(a.added_at) : new Date(0);
-                    const dateB = b.added_at ? new Date(b.added_at) : new Date(0);
-                    comparison = dateA - dateB;
-                }
-                
-                return sortAscending ? comparison : -comparison;
-            });
-            
-            displayRepositories(filtered);
-        }
-        
-        function displayRepositories(repos) {
-            const list = document.getElementById('repositoriesList');
-            
-            if (repos.length === 0) {
-                if (allRepositories.length === 0) {
-                    list.innerHTML = '<div class="empty-state">No repositories added yet</div>';
-                } else {
-                    list.innerHTML = '<div class="empty-state">No repositories match your search</div>';
-                }
-                return;
-            }
-            
-            list.innerHTML = repos.map(r => `
-                <div class="list-item">
-                    <div class="list-item-content">
-                        <div class="list-item-title">
-                            ${r.repo_owner}/${r.repo_name}
-                            ${r.latest_release ? `<span class="badge success">${r.latest_release}</span>` : ''}
-
-                        </div>
-                        <div class="list-item-meta">
-                            ${r.latest_release_url ? `<a href="${r.latest_release_url}" target="_blank" style="color: var(--primary-color);">View Latest Release</a> • ` : ''}
-                            Last checked: ${formatLocalDateTime(r.last_checked)}
-                        </div>
-                        ${r.latest_release_body ? `<div class="release-body">${escapeHtml(r.latest_release_body.substring(0, 200))}${r.latest_release_body.length > 200 ? '...' : ''}</div>` : ''}
-                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
-                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #666; margin: 0;">
-                                <input type="checkbox" ${r.notify_pre_releases ? 'checked' : ''} 
-                                    onchange="togglePreReleases(${r.id}, this.checked)"
-                                    style="width: auto; margin: 0;">
-                                Include pre-releases
-                            </label>
-                        </div>
-                    </div>
-                    <div class="list-item-actions">
-                        <button class="danger small" onclick="deleteRepository(${r.id})">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        async function loadRepositories() {
-            const resp = await fetch('/api/repositories');
-            allRepositories = await resp.json();
-            filterAndSortRepositories();
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        async function addRepository() {
-            const url = document.getElementById('repoUrl').value;
-            
-            try {
-                const resp = await fetch('/api/repositories', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({repo_url: url})
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('repoMessage', 'Repository added successfully!', 'success');
-                    document.getElementById('repoUrl').value = '';
-                    loadRepositories();
-                } else {
-                    showMessage('repoMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('repoMessage', 'Error adding repository');
-            }
-        }
-        
-        async function deleteRepository(id) {
-            if (!confirm('Delete this repository?')) return;
-            
-            await fetch(`/api/repositories/${id}`, {method: 'DELETE'});
-            loadRepositories();
-        }
-        
-        async function togglePreReleases(repoId, enabled) {
-            try {
-                const resp = await fetch(`/api/repositories/${repoId}/pre-releases`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({enabled: enabled})
-                });
-                
-                if (resp.ok) {
-                    // Update local data
-                    const repo = allRepositories.find(r => r.id === repoId);
-                    if (repo) {
-                        repo.notify_pre_releases = enabled;
-                    }
-                } else {
-                    showMessage('repoMessage', 'Error updating pre-release setting');
-                    loadRepositories();
-                }
-            } catch (e) {
-                showMessage('repoMessage', 'Error updating pre-release setting');
-                loadRepositories();
-            }
-        }
-        
-        async function loadEndpoints() {
-            const resp = await fetch('/api/apprise-endpoints');
-            const endpoints = await resp.json();
-            
-            const list = document.getElementById('endpointsList');
-            
-            if (endpoints.length === 0) {
-                list.innerHTML = '<div class="empty-state">No endpoints configured</div>';
-                return;
-            }
-            
-            list.innerHTML = endpoints.map(e => {
-                let displayEndpoint = e.endpoint;
-                // Mask shared telegram
-                if (e.endpoint.startsWith('telegram-shared://')) {
-                    const chatId = e.endpoint.split('telegram-shared://')[1];
-                    displayEndpoint = `Hubrise Telegram Bot (@hubrise_bot) (Chat ID: ${chatId})`;
-                }
-
-                return `
-                <div class="list-item">
-                    <div class="list-item-content">
-                        <div class="list-item-title">${e.name}</div>
-                        <div class="list-item-meta" style="word-break: break-all;">${displayEndpoint}</div>
-                    </div>
-                    <div class="list-item-actions">
-                        <button class="secondary small" onclick="testEndpoint(${e.id})">Test</button>
-                        <button class="danger small" onclick="deleteEndpoint(${e.id})">Delete</button>
-                    </div>
-                </div>
-            `}).join('');
-        }
-        
-        async function testEndpoint(id) {
-            showMessage('endpointMessage', 'Sending test notification...', 'success');
-            
-            try {
-                const resp = await fetch(`/api/apprise-endpoints/${id}/test`, {
-                    method: 'POST'
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('endpointMessage', data.message, 'success');
-                } else {
-                    showMessage('endpointMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('endpointMessage', 'Error testing endpoint');
-            }
-        }
-        
-        async function addEndpoint() {
-            const name = document.getElementById('endpointName').value;
-            const endpoint = document.getElementById('endpointUrl').value;
-            
-            submitEndpoint(name, endpoint);
-        }
-
-        async function addTelegramEndpoint() {
-            const name = document.getElementById('endpointName').value;
-            const chatId = document.getElementById('telegramChatId').value;
-            
-            if (!chatId) {
-                showMessage('endpointMessage', 'Chat ID required');
-                return;
-            }
-
-            const endpoint = `telegram-shared://${chatId}`;
-            const endpointName = name || `Telegram (${chatId})`;
-            
-            submitEndpoint(endpointName, endpoint);
-        }
-        
-        async function submitEndpoint(name, endpoint) {
-            try {
-                const resp = await fetch('/api/apprise-endpoints', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name, endpoint})
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('endpointMessage', 'Endpoint added successfully!', 'success');
-                    document.getElementById('endpointName').value = '';
-                    document.getElementById('endpointUrl').value = '';
-                    document.getElementById('telegramChatId').value = '';
-                    loadEndpoints();
-                } else {
-                    showMessage('endpointMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('endpointMessage', 'Error adding endpoint');
-            }
-        }
-        
-        async function deleteEndpoint(id) {
-            if (!confirm('Delete this endpoint?')) return;
-            
-            await fetch(`/api/apprise-endpoints/${id}`, {method: 'DELETE'});
-            loadEndpoints();
-        }
-        
-        async function loadAdminSettings() {
-            try {
-                const resp = await fetch('/api/admin/config');
-                if (!resp.ok) {
-                    console.error('Failed to load admin config');
-                    return;
-                }
-                
-                const config = await resp.json();
-                
-                document.getElementById('pollingInterval').value = config.polling_interval;
-                document.getElementById('registrationsEnabled').checked = config.registrations_enabled;
-                
-                const tokensList = document.getElementById('tokensList');
-                if (config.tokens.length === 0) {
-                    tokensList.innerHTML = '<div class="empty-state">No tokens configured</div>';
-                } else {
-                    tokensList.innerHTML = config.tokens.map(t => `
-                        <div class="list-item">
-                            <div class="list-item-content">
-                                <div class="list-item-title">${t.token}</div>
-                                <div class="list-item-meta">
-                                    Rate limit: ${t.rate_limit_remaining}/60 remaining
-                                </div>
-                            </div>
-                            <div class="list-item-actions">
-                                <button class="danger small" onclick="deleteToken(${t.id})">Delete</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-                
-                await loadUsers();
-            } catch (e) {
-                console.error('Error loading admin settings:', e);
-                showMessage('adminMessage', 'Error loading admin settings');
-            }
-        }
-        
-        async function updateRegistrationSettings() {
-            const enabled = document.getElementById('registrationsEnabled').checked;
-            
-            try {
-                const resp = await fetch('/api/admin/config', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({registrations_enabled: enabled})
-                });
-                
-                if (resp.ok) {
-                    showMessage('adminMessage', 'Registration settings updated!', 'success');
-                } else {
-                    showMessage('adminMessage', 'Error updating settings');
-                }
-            } catch (e) {
-                showMessage('adminMessage', 'Connection error');
-            }
-        }
-        
-        async function loadUsers() {
-            try {
-                const resp = await fetch('/api/admin/users');
-                const users = await resp.json();
-                
-                const usersList = document.getElementById('usersList');
-                if (users.length === 0) {
-                    usersList.innerHTML = '<div class="empty-state">No users</div>';
-                    return;
-                }
-                
-                usersList.innerHTML = users.map(u => `
-                    <div class="list-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">
-                                ${u.username}
-                                ${u.is_admin ? '<span class="badge admin">Admin</span>' : ''}
-                            </div>
-                            <div class="list-item-meta">
-                                ${u.repo_count} repositories • ${u.endpoint_count} endpoints<br>
-                                Created: ${formatLocalDateTime(u.created_at)}
-                            </div>
-                        </div>
-                        <div class="list-item-actions">
-                            ${!u.is_admin ? `<button class="secondary small" onclick="makeAdmin(${u.id})">Make Admin</button>` : 
-                              `<button class="secondary small" onclick="removeAdmin(${u.id})">Remove Admin</button>`}
-                            <button class="secondary small" onclick="changePassword(${u.id}, '${u.username}')">Change Password</button>
-                            <button class="danger small" onclick="deleteUser(${u.id}, '${u.username}')">Delete</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error('Error loading users:', e);
-            }
-        }
-        
-        async function createUser() {
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value;
-            const is_admin = document.getElementById('newUserAdmin').checked;
-            
-            if (!username || !password) {
-                showMessage('userManagementMessage', 'Username and password required');
-                return;
-            }
-            
-            try {
-                const resp = await fetch('/api/admin/users', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({username, password, is_admin})
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'User created successfully!', 'success');
-                    document.getElementById('newUsername').value = '';
-                    document.getElementById('newPassword').value = '';
-                    document.getElementById('newUserAdmin').checked = false;
-                    loadUsers();
-                } else {
-                    showMessage('userManagementMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error creating user');
-            }
-        }
-        
-        async function makeAdmin(userId) {
-            if (!confirm('Make this user an admin?')) return;
-            
-            try {
-                const resp = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({is_admin: true})
-                });
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'User promoted to admin!', 'success');
-                    loadUsers();
-                } else {
-                    const data = await resp.json();
-                    showMessage('userManagementMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error updating user');
-            }
-        }
-        
-        async function removeAdmin(userId) {
-            if (!confirm('Remove admin privileges from this user?')) return;
-            
-            try {
-                const resp = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({is_admin: false})
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'Admin privileges removed!', 'success');
-                    loadUsers();
-                } else {
-                    showMessage('userManagementMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error updating user');
-            }
-        }
-        
-        async function changePassword(userId, username) {
-            const newPassword = prompt(`Enter new password for ${username}:`);
-            if (!newPassword) return;
-            
-            try {
-                const resp = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({password: newPassword})
-                });
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'Password changed successfully!', 'success');
-                } else {
-                    showMessage('userManagementMessage', 'Error changing password');
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error changing password');
-            }
-        }
-        
-        async function deleteUser(userId, username) {
-            if (!confirm(`Delete user "${username}"? This will also delete all their repositories and endpoints.`)) return;
-            
-            try {
-                const resp = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'DELETE'
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('userManagementMessage', 'User deleted successfully!', 'success');
-                    loadUsers();
-                } else {
-                    showMessage('userManagementMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('userManagementMessage', 'Error deleting user');
-            }
-        }
-        
-        async function updatePollingInterval() {
-            const interval = parseInt(document.getElementById('pollingInterval').value);
-            
-            if (isNaN(interval) || interval < 1) {
-                showMessage('adminMessage', 'Polling interval must be at least 1 minute');
-                return;
-            }
-            
-            try {
-                const resp = await fetch('/api/admin/config', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({polling_interval: interval})
-                });
-                
-                if (resp.ok) {
-                    showMessage('adminMessage', 'Polling interval updated!', 'success');
-                } else {
-                    const data = await resp.json();
-                    showMessage('adminMessage', data.error || 'Error updating interval');
-                }
-            } catch (e) {
-                showMessage('adminMessage', 'Connection error');
-            }
-        }
-        
-        async function addToken() {
-            const token = document.getElementById('githubToken').value;
-            
-            try {
-                const resp = await fetch('/api/admin/tokens', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({token})
-                });
-                
-                if (resp.ok) {
-                    showMessage('adminMessage', 'Token added successfully!', 'success');
-                    document.getElementById('githubToken').value = '';
-                    loadAdminSettings();
-                } else {
-                    showMessage('adminMessage', 'Error adding token');
-                }
-            } catch (e) {
-                showMessage('adminMessage', 'Connection error');
-            }
-        }
-        
-        async function deleteToken(id) {
-            if (!confirm('Delete this token?')) return;
-            
-            await fetch('/api/admin/tokens', {
-                method: 'DELETE',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id})
-            });
-            loadAdminSettings();
-        }
-        
-        async function pollNow() {
-            showMessage('adminMessage', 'Polling all repositories now...', 'success');
-            
-            try {
-                const resp = await fetch('/api/admin/poll-now', {
-                    method: 'POST'
-                });
-                
-                const data = await resp.json();
-                
-                if (resp.ok) {
-                    showMessage('adminMessage', data.message + ' Check the repositories tab for updates.', 'success');
-                    setTimeout(() => {
-                        if (document.getElementById('repositoriesTab').classList.contains('active')) {
-                            loadRepositories();
-                        }
-                    }, 1000);
-                } else {
-                    showMessage('adminMessage', data.error);
-                }
-            } catch (e) {
-                showMessage('adminMessage', 'Error triggering poll');
-            }
-        }
-
-        function toggleMobileMenu() {
-            const tabs = document.querySelector('.tabs');
-            const overlay = document.querySelector('.mobile-menu-overlay');
-            const toggleBtn = document.querySelector('.mobile-menu-toggle');
-            
-            tabs.classList.toggle('active');
-            overlay.classList.toggle('active');
-            toggleBtn.classList.toggle('active');
-        }
-
-        function closeMobileMenu() {
-            const tabs = document.querySelector('.tabs');
-            const overlay = document.querySelector('.mobile-menu-overlay');
-            const toggleBtn = document.querySelector('.mobile-menu-toggle');
-            
-            tabs.classList.remove('active');
-            overlay.classList.remove('active');
-            toggleBtn.classList.remove('active');
-        }
-
-        // Close menu when a tab is clicked on mobile
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.innerWidth < 768) {
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.addEventListener('click', closeMobileMenu);
-                });
-            }
-        });
+        let currentUser=null;let isAdmin=false;let allRepositories=[];let sortAscending=false;let telegramEnabled=false;
+        let use24HourTime=localStorage.getItem('use24HourTime')==='true';
+        function formatLocalDateTime(i){if(!i||i==='Never')return'Never';if(i.indexOf('Z')===-1&&i.indexOf('+')===-1)i+='Z';const d=new Date(i);return d.toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:!use24HourTime});}
+        function openSettings(){document.getElementById('timeFormatToggle').checked=use24HourTime;document.getElementById('settingsModal').classList.add('active');}
+        function closeSettings(){document.getElementById('settingsModal').classList.remove('active');}
+        function saveSettings(){use24HourTime=document.getElementById('timeFormatToggle').checked;localStorage.setItem('use24HourTime',use24HourTime);filterAndSortRepositories();if(isAdmin&&document.getElementById('adminTab').classList.contains('active'))loadUsers();}
+        window.onload=async()=>{await checkRegistrationStatus();try{const r=await fetch('/api/user');if(r.ok){const d=await r.json();currentUser=d.username;isAdmin=d.is_admin;telegramEnabled=d.telegram_bot_configured;showApp();}}catch(e){}};
+        async function checkRegistrationStatus(){try{const r=await fetch('/api/config/registrations-enabled');const d=await r.json();if(!d.enabled)document.getElementById('createAccountBtn').style.display='none';}catch(e){}}
+        function showMessage(id,msg,type='error'){const el=document.getElementById(id);el.innerHTML='<div class="message '+type+'">'+msg+'</div>';setTimeout(()=>el.innerHTML='',5000);}
+        function showLogin(){document.getElementById('loginForm').classList.remove('hidden');document.getElementById('registerForm').classList.add('hidden');}
+        function showRegister(){document.getElementById('loginForm').classList.add('hidden');document.getElementById('registerForm').classList.remove('hidden');}
+        function handleLoginKeypress(e){if(e.key==='Enter')login();}
+        function handleRegisterKeypress(e){if(e.key==='Enter')register();}
+        async function login(){const u=document.getElementById('loginUsername').value;const p=document.getElementById('loginPassword').value;try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});const d=await r.json();if(r.ok){currentUser=d.username;isAdmin=d.is_admin;showApp();const ur=await fetch('/api/user');const ud=await ur.json();telegramEnabled=ud.telegram_bot_configured;setupEndpointUI();}else showMessage('authMessage',d.error);}catch(e){showMessage('authMessage','Connection error');}}
+        async function register(){const u=document.getElementById('regUsername').value;const p=document.getElementById('regPassword').value;try{const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});const d=await r.json();if(r.ok){showMessage('authMessage','Account created! Please login.','success');showLogin();}else showMessage('authMessage',d.error);}catch(e){showMessage('authMessage','Connection error');}}
+        async function logout(){await fetch('/api/logout',{method:'POST'});location.reload();}
+        function showApp(){document.getElementById('authContainer').classList.add('hidden');document.getElementById('appContainer').classList.remove('hidden');document.getElementById('currentUser').textContent=currentUser+(isAdmin?' (Admin)':'');if(isAdmin)document.getElementById('adminTabButton').style.display='block';setupEndpointUI();loadRepositories();loadEndpoints();}
+        function setupEndpointUI(){document.getElementById('endpointTypeToggle').style.display=telegramEnabled?'flex':'none';}
+        function toggleEndpointType(t){const c=document.getElementById('btnTypeCustom');const g=document.getElementById('btnTypeTelegram');const cf=document.getElementById('formTypeCustom');const gf=document.getElementById('formTypeTelegram');if(t==='custom'){c.classList.add('active');g.classList.remove('active');cf.style.display='block';gf.style.display='none';}else{c.classList.remove('active');g.classList.add('active');cf.style.display='none';gf.style.display='block';}}
+        function switchTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));event.target.classList.add('active');document.getElementById(tab+'Tab').classList.add('active');if(tab==='repositories')loadRepositories();else if(tab==='endpoints')loadEndpoints();else if(tab==='admin'&&isAdmin)loadAdminSettings();}
+        function toggleSortOrder(){sortAscending=!sortAscending;const t=document.getElementById('sortOrderToggle');t.textContent=sortAscending?'\u2191 Ascending':'\u2193 Descending';t.classList.toggle('active',sortAscending);filterAndSortRepositories();}
+        function filterAndSortRepositories(){const s=document.getElementById('repoSearch').value.toLowerCase();const by=document.getElementById('sortBy').value;let f=allRepositories.filter(r=>{const n=(r.repo_owner+'/'+r.repo_name).toLowerCase();return n.includes(s)||(r.latest_release&&r.latest_release.toLowerCase().includes(s));});f.sort((a,b)=>{let c=0;if(by==='name'){c=(a.repo_owner+'/'+a.repo_name).toLowerCase().localeCompare((b.repo_owner+'/'+b.repo_name).toLowerCase());}else if(by==='release'){if(!a.latest_release&&!b.latest_release)c=0;else if(!a.latest_release)c=1;else if(!b.latest_release)c=-1;else c=a.latest_release.localeCompare(b.latest_release);}else if(by==='checked'){c=(b.last_checked?new Date(b.last_checked):new Date(0))-(a.last_checked?new Date(a.last_checked):new Date(0));}else if(by==='added'){c=(a.added_at?new Date(a.added_at):new Date(0))-(b.added_at?new Date(b.added_at):new Date(0));}return sortAscending?c:-c;});displayRepositories(f);}
+        function displayRepositories(repos){const l=document.getElementById('repositoriesList');if(!repos.length){l.innerHTML=allRepositories.length?'<div class="empty-state"><div class="mb-3 text-3xl">🔍</div>No repositories match your search</div>':'<div class="empty-state"><div class="mb-3 text-3xl">📦</div>No repositories added yet</div>';return;}l.innerHTML=repos.map(r=>'<div class="list-item"><div class="flex-1 min-w-0 mb-3 md:mb-0"><div class="flex items-center gap-2 flex-wrap mb-2"><span class="font-semibold text-white text-[15px]">'+r.repo_owner+'/'+r.repo_name+'</span>'+(r.latest_release?'<span class="badge success">'+r.latest_release+'</span>':'')+'</div><div class="text-[13px] text-white/35 mb-2">'+(r.latest_release_url?'<a href="'+r.latest_release_url+'" target="_blank" class="text-brand-400 hover:text-brand-300 transition-colors">View Latest Release</a> • ':'')+'Last checked: '+formatLocalDateTime(r.last_checked)+'</div>'+(r.latest_release_body?'<div class="release-body">'+escapeHtml(r.latest_release_body.substring(0,200))+(r.latest_release_body.length>200?'...':'')+'</div>':'')+'</div><div class="flex items-center justify-between mt-4 pt-4 border-t border-white/5"><div class="flex items-center gap-3"><label class="toggle-switch"><input type="checkbox" '+(r.notify_pre_releases?'checked':'')+' onchange="togglePreReleases('+r.id+',this.checked)"><span class="toggle-slider"></span></label><span class="text-[13px] text-white/40">Include pre-releases</span></div><button class="btn-danger btn-sm" onclick="deleteRepository('+r.id+')">Delete</button></div></div>').join('');}
+        async function loadRepositories(){const r=await fetch('/api/repositories');allRepositories=await r.json();filterAndSortRepositories();}
+        function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+        async function addRepository(){const url=document.getElementById('repoUrl').value;try{const r=await fetch('/api/repositories',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({repo_url:url})});const d=await r.json();if(r.ok){showMessage('repoMessage','Repository added successfully!','success');document.getElementById('repoUrl').value='';loadRepositories();}else showMessage('repoMessage',d.error);}catch(e){showMessage('repoMessage','Error adding repository');}}
+        async function deleteRepository(id){if(!confirm('Delete this repository?'))return;await fetch('/api/repositories/'+id,{method:'DELETE'});loadRepositories();}
+        async function togglePreReleases(rid,enabled){try{const r=await fetch('/api/repositories/'+rid+'/pre-releases',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:enabled})});if(r.ok){const repo=allRepositories.find(r=>r.id===rid);if(repo)repo.notify_pre_releases=enabled;}else{showMessage('repoMessage','Error updating pre-release setting');loadRepositories();}}catch(e){showMessage('repoMessage','Error updating pre-release setting');loadRepositories();}}
+        async function loadEndpoints(){const r=await fetch('/api/apprise-endpoints');const eps=await r.json();const l=document.getElementById('endpointsList');if(!eps.length){l.innerHTML='<div class="empty-state"><div class="mb-3 text-3xl">🔔</div>No endpoints configured</div>';return;}l.innerHTML=eps.map(e=>{let d=e.endpoint;if(e.endpoint.startsWith('telegram-shared://')){d='Hubrise Telegram Bot (Chat ID: '+e.endpoint.split('telegram-shared://')[1]+')';}return '<div class="list-item"><div class="flex-1 min-w-0 mb-3 md:mb-0"><div class="font-semibold text-white text-[15px] mb-1">'+e.name+'</div><div class="text-[13px] text-white/35 break-all">'+d+'</div></div><div class="flex gap-2 flex-wrap md:ml-4"><button class="btn-glass btn-sm" onclick="testEndpoint('+e.id+')">Test</button><button class="btn-danger btn-sm" onclick="deleteEndpoint('+e.id+')">Delete</button></div></div>';}).join('');}
+        async function testEndpoint(id){showMessage('endpointMessage','Sending test notification...','success');try{const r=await fetch('/api/apprise-endpoints/'+id+'/test',{method:'POST'});const d=await r.json();if(r.ok)showMessage('endpointMessage',d.message,'success');else showMessage('endpointMessage',d.error);}catch(e){showMessage('endpointMessage','Error testing endpoint');}}
+        async function addEndpoint(){const n=document.getElementById('endpointName').value;const e=document.getElementById('endpointUrl').value;submitEndpoint(n,e);}
+        async function addTelegramEndpoint(){const n=document.getElementById('endpointName').value;const c=document.getElementById('telegramChatId').value;if(!c){showMessage('endpointMessage','Chat ID required');return;}submitEndpoint(n||'Telegram ('+c+')','telegram-shared://'+c);}
+        async function submitEndpoint(name,ep){try{const r=await fetch('/api/apprise-endpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,endpoint:ep})});const d=await r.json();if(r.ok){showMessage('endpointMessage','Endpoint added successfully!','success');document.getElementById('endpointName').value='';document.getElementById('endpointUrl').value='';document.getElementById('telegramChatId').value='';loadEndpoints();}else showMessage('endpointMessage',d.error);}catch(e){showMessage('endpointMessage','Error adding endpoint');}}
+        async function deleteEndpoint(id){if(!confirm('Delete this endpoint?'))return;await fetch('/api/apprise-endpoints/'+id,{method:'DELETE'});loadEndpoints();}
+        async function loadAdminSettings(){try{const r=await fetch('/api/admin/config');if(!r.ok)return;const c=await r.json();document.getElementById('pollingInterval').value=c.polling_interval;document.getElementById('registrationsEnabled').checked=c.registrations_enabled;const tl=document.getElementById('tokensList');if(!c.tokens.length)tl.innerHTML='<div class="empty-state text-sm py-4">No tokens configured</div>';else tl.innerHTML=c.tokens.map(t=>'<div class="list-item"><div class="flex-1 min-w-0 mb-3 md:mb-0"><div class="font-mono text-white/70 text-sm mb-1">'+t.token+'</div><div class="text-[13px] text-white/35">Rate limit: '+t.rate_limit_remaining+'/60 remaining</div></div><div class="flex gap-2 md:ml-4"><button class="btn-danger btn-sm" onclick="deleteToken('+t.id+')">Delete</button></div></div>').join('');await loadUsers();}catch(e){showMessage('adminMessage','Error loading admin settings');}}
+        async function updateRegistrationSettings(){const e=document.getElementById('registrationsEnabled').checked;try{const r=await fetch('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({registrations_enabled:e})});if(r.ok)showMessage('adminMessage','Registration settings updated!','success');else showMessage('adminMessage','Error updating settings');}catch(e){showMessage('adminMessage','Connection error');}}
+        async function loadUsers(){try{const r=await fetch('/api/admin/users');const u=await r.json();const l=document.getElementById('usersList');if(!u.length){l.innerHTML='<div class="empty-state text-sm py-4">No users</div>';return;}l.innerHTML=u.map(usr=>'<div class="list-item"><div class="flex-1 min-w-0 mb-3 md:mb-0"><div class="flex items-center gap-2 mb-1"><span class="font-semibold text-white text-[15px]">'+usr.username+'</span>'+(usr.is_admin?'<span class="badge admin">Admin</span>':'')+'</div><div class="text-[13px] text-white/35">'+usr.repo_count+' repositories \u00b7 '+usr.endpoint_count+' endpoints<br>Created: '+formatLocalDateTime(usr.created_at)+'</div></div><div class="flex flex-wrap items-center justify-between mt-4 pt-4 border-t border-white/5"><div class="flex gap-2 flex-wrap">'+(!usr.is_admin?'<button class="btn-glass btn-sm" onclick="makeAdmin('+usr.id+')">Make Admin</button>':'<button class="btn-glass btn-sm" onclick="removeAdmin('+usr.id+')">Remove Admin</button>')+'<button class="btn-glass btn-sm" onclick="changePassword('+usr.id+',\''+usr.username+'\')">Change Password</button></div><button class="btn-danger btn-sm" onclick="deleteUser('+usr.id+',\''+usr.username+'\')">Delete</button></div></div>').join('');}catch(e){}}
+        async function createUser(){const u=document.getElementById('newUsername').value.trim();const p=document.getElementById('newPassword').value;const a=document.getElementById('newUserAdmin').checked;if(!u||!p){showMessage('userManagementMessage','Username and password required');return;}try{const r=await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,is_admin:a})});const d=await r.json();if(r.ok){showMessage('userManagementMessage','User created successfully!','success');document.getElementById('newUsername').value='';document.getElementById('newPassword').value='';document.getElementById('newUserAdmin').checked=false;loadUsers();}else showMessage('userManagementMessage',d.error);}catch(e){showMessage('userManagementMessage','Error creating user');}}
+        async function makeAdmin(id){if(!confirm('Make this user an admin?'))return;try{const r=await fetch('/api/admin/users/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_admin:true})});if(r.ok){showMessage('userManagementMessage','User promoted to admin!','success');loadUsers();}else{const d=await r.json();showMessage('userManagementMessage',d.error);}}catch(e){showMessage('userManagementMessage','Error updating user');}}
+        async function removeAdmin(id){if(!confirm('Remove admin privileges from this user?'))return;try{const r=await fetch('/api/admin/users/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_admin:false})});const d=await r.json();if(r.ok){showMessage('userManagementMessage','Admin privileges removed!','success');loadUsers();}else showMessage('userManagementMessage',d.error);}catch(e){showMessage('userManagementMessage','Error updating user');}}
+        async function changePassword(id,un){const p=prompt('Enter new password for '+un+':');if(!p)return;try{const r=await fetch('/api/admin/users/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p})});if(r.ok)showMessage('userManagementMessage','Password changed successfully!','success');else showMessage('userManagementMessage','Error changing password');}catch(e){showMessage('userManagementMessage','Error changing password');}}
+        async function deleteUser(id,un){if(!confirm('Delete user "'+un+'"? This will also delete all their repositories and endpoints.'))return;try{const r=await fetch('/api/admin/users/'+id,{method:'DELETE'});const d=await r.json();if(r.ok){showMessage('userManagementMessage','User deleted successfully!','success');loadUsers();}else showMessage('userManagementMessage',d.error);}catch(e){showMessage('userManagementMessage','Error deleting user');}}
+        async function updatePollingInterval(){const i=parseInt(document.getElementById('pollingInterval').value);if(isNaN(i)||i<1){showMessage('adminMessage','Polling interval must be at least 1 minute');return;}try{const r=await fetch('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({polling_interval:i})});if(r.ok)showMessage('adminMessage','Polling interval updated!','success');else{const d=await r.json();showMessage('adminMessage',d.error||'Error updating interval');}}catch(e){showMessage('adminMessage','Connection error');}}
+        async function addToken(){const t=document.getElementById('githubToken').value;try{const r=await fetch('/api/admin/tokens',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});if(r.ok){showMessage('adminMessage','Token added successfully!','success');document.getElementById('githubToken').value='';loadAdminSettings();}else showMessage('adminMessage','Error adding token');}catch(e){showMessage('adminMessage','Connection error');}}
+        async function deleteToken(id){if(!confirm('Delete this token?'))return;await fetch('/api/admin/tokens',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});loadAdminSettings();}
+        async function pollNow(){showMessage('adminMessage','Polling all repositories now...','success');try{const r=await fetch('/api/admin/poll-now',{method:'POST'});const d=await r.json();if(r.ok){showMessage('adminMessage',d.message+' Check the repositories tab for updates.','success');setTimeout(()=>{if(document.getElementById('repositoriesTab').classList.contains('active'))loadRepositories();},1000);}else showMessage('adminMessage',d.error);}catch(e){showMessage('adminMessage','Error triggering poll');}}
+        function toggleMobileMenu(){document.querySelector('.tabs').classList.toggle('active');document.querySelector('.mobile-menu-overlay').classList.toggle('active');document.querySelector('.mobile-menu-toggle').classList.toggle('active');}
+        function closeMobileMenu(){document.querySelector('.tabs').classList.remove('active');document.querySelector('.mobile-menu-overlay').classList.remove('active');document.querySelector('.mobile-menu-toggle').classList.remove('active');}
+        document.addEventListener('DOMContentLoaded',function(){if(window.innerWidth<768)document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',closeMobileMenu));});
     </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timezone
 import secrets
 import threading
 import time
@@ -32,7 +32,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     repositories = db.relationship('Repository', backref='user', lazy=True, cascade='all, delete-orphan')
     apprise_endpoints = db.relationship('AppriseEndpoint', backref='user', lazy=True, cascade='all, delete-orphan')
 
@@ -47,14 +47,14 @@ class Repository(db.Model):
     latest_release_body = db.Column(db.Text)
     notify_pre_releases = db.Column(db.Boolean, default=False)
     last_checked = db.Column(db.DateTime)
-    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    added_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class AppriseEndpoint(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     endpoint = db.Column(db.String(500), nullable=False)
     name = db.Column(db.String(100))
-    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    added_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class Config(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -79,7 +79,7 @@ class GitHubAPI:
             return None
         
         # Find token with available rate limit
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for i in range(len(tokens)):
             idx = (self.current_token_index + i) % len(tokens)
             token = tokens[idx]
@@ -177,7 +177,7 @@ class GitHubAPI:
                 if token_obj:
                     token_obj.rate_limit_remaining = int(remaining)
                     if reset:
-                        token_obj.rate_limit_reset = datetime.fromtimestamp(int(reset))
+                        token_obj.rate_limit_reset = datetime.fromtimestamp(int(reset), tz=timezone.utc)
                     db.session.commit()
 
 github_api = GitHubAPI()
@@ -225,14 +225,14 @@ class MonitoringService:
                     repo.latest_release = latest['tag_name']
                     repo.latest_release_url = latest['html_url']
                     repo.latest_release_body = latest.get('body', '')
-                    repo.last_checked = datetime.utcnow()
+                    repo.last_checked = datetime.now(timezone.utc)
                     db.session.commit()
                     
                     # Send notifications (only if there was a previous release)
                     if old_release:
                         self._send_notifications(repo, latest)
                 else:
-                    repo.last_checked = datetime.utcnow()
+                    repo.last_checked = datetime.now(timezone.utc)
                     db.session.commit()
                 
                 time.sleep(1)  # Rate limiting between repos
@@ -527,7 +527,7 @@ def repositories():
             latest_release=latest['tag_name'] if latest else None,
             latest_release_url=latest['html_url'] if latest else None,
             latest_release_body=latest.get('body', '') if latest else None,
-            last_checked=datetime.utcnow()
+            last_checked=datetime.now(timezone.utc)
         )
         db.session.add(repo)
         db.session.commit()
