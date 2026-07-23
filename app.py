@@ -120,7 +120,7 @@ class GitHubAPI:
                     'tag_name': data.get('tag_name'),
                     'html_url': data.get('html_url'),
                     'name': data.get('name'),
-                    'body': data.get('body', '')[:500],
+                    'body': data.get('body', '')[:2000],
                     'published_at': data.get('published_at'),
                     'prerelease': data.get('prerelease', False)
                 }
@@ -159,7 +159,7 @@ class GitHubAPI:
                         'tag_name': data.get('tag_name'),
                         'html_url': data.get('html_url'),
                         'name': data.get('name'),
-                        'body': data.get('body', '')[:500],
+                        'body': data.get('body', '')[:2000],
                         'published_at': data.get('published_at'),
                         'prerelease': data.get('prerelease', False)
                     }
@@ -282,7 +282,7 @@ class GitLabAPI:
             'tag_name': tag_name,
             'html_url': self._build_release_html_url(project_path, tag_name, instance_url),
             'name': data.get('name'),
-            'body': (data.get('description') or '')[:500],
+            'body': (data.get('description') or '')[:2000],
             'published_at': data.get('released_at'),
             'prerelease': data.get('prerelease', False)
         }
@@ -446,7 +446,7 @@ class GiteaCompatibleAPI:
             'tag_name': tag_name,
             'html_url': self._build_release_html_url(owner, repo, tag_name, base_url),
             'name': data.get('name'),
-            'body': (data.get('body') or '')[:500],
+            'body': (data.get('body') or '')[:2000],
             'published_at': data.get('created_at') or data.get('published_at'),
             'prerelease': data.get('prerelease', False)
         }
@@ -645,8 +645,9 @@ class MonitoringService:
     
         # Sanitize and limit release notes
         if release_body:
-            # Limit to 800 characters to keep notifications reasonable
-            max_chars = 800
+            # Limit to 2000 characters for most services, 1800 for Discord
+            # (Discord needs room for metadata in the message)
+            max_chars = 2000
             if len(release_body) > max_chars:
                 release_body = release_body[:max_chars] + "..."
         
@@ -666,7 +667,9 @@ class MonitoringService:
                         self._send_apprise_notification(real_url, title, body, body_format='html')
                     elif 'discord' in real_url.lower():
                         # Discord with markdown (triple backticks)
-                        body = self._build_discord_body(repo, release_info, release_body)
+                        # Use 1800 chars for Discord to leave room for metadata
+                        discord_body = release_body[:1800] + '...' if len(release_body) > 1800 else release_body
+                        body = self._build_discord_body(repo, release_info, discord_body)
                         self._send_apprise_notification(real_url, title, body, body_format='markdown')
                     else:
                         # Other services with text formatting
@@ -1255,7 +1258,7 @@ def debug_repo(repo_id):
                         result['api_test']['success'] = True
                         result['api_test']['tag_name'] = r.get('tag_name')
                         result['api_test']['name'] = r.get('name')
-                        body = r.get('description', '')[:500]
+                        body = (r.get('description') or '')[:2000]
                         result['api_test']['has_body'] = bool(body)
                         result['api_test']['body_length'] = len(body)
                         result['api_test']['body_preview'] = body[:200]
@@ -1265,7 +1268,7 @@ def debug_repo(repo_id):
                 else:
                     result['api_test']['success'] = False
                     result['api_test']['error'] = f'HTTP {resp.status_code}'
-                    result['api_test']['response_body'] = resp.text[:500]
+                    result['api_test']['response_body'] = resp.text[:2000]
             except requests.exceptions.SSLError as e:
                 result['api_test']['success'] = False
                 result['api_test']['error'] = f'SSL Error: {str(e)}'
@@ -1331,7 +1334,7 @@ def debug_repo(repo_id):
                         result['api_test']['success'] = True
                         result['api_test']['tag_name'] = r.get('tag_name')
                         result['api_test']['name'] = r.get('name')
-                        body = (r.get('body') or '')[:500]
+                        body = (r.get('body') or '')[:2000]
                         result['api_test']['has_body'] = bool(body)
                         result['api_test']['body_length'] = len(body)
                         result['api_test']['body_preview'] = body[:200]
@@ -1341,7 +1344,7 @@ def debug_repo(repo_id):
                 else:
                     result['api_test']['success'] = False
                     result['api_test']['error'] = f'HTTP {resp.status_code}'
-                    result['api_test']['response_body'] = resp.text[:500]
+                    result['api_test']['response_body'] = resp.text[:2000]
             except requests.exceptions.SSLError as e:
                 result['api_test']['success'] = False
                 result['api_test']['error'] = f'SSL Error: {str(e)}'
