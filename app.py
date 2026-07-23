@@ -421,13 +421,15 @@ class MonitoringService:
                         if old_release:
                             self._send_notifications(repo, latest)
                     else:
-                        # Same release tag — refresh body/URL if they were missing
-                        # (covers case where initial fetch stored the tag but body was empty)
+                        # Same release tag — always refresh body/URL to ensure
+                        # data is current (covers case where initial fetch stored
+                        # the tag but body was empty, or body was truncated)
                         latest_body = latest.get('body', '')
-                        if not repo.latest_release_body and latest_body:
+                        latest_url = latest.get('html_url')
+                        if latest_body and latest_body != repo.latest_release_body:
                             repo.latest_release_body = latest_body
-                        if not repo.latest_release_url and latest.get('html_url'):
-                            repo.latest_release_url = latest['html_url']
+                        if latest_url and latest_url != repo.latest_release_url:
+                            repo.latest_release_url = latest_url
                         repo.last_checked = datetime.now(timezone.utc)
                         db.session.commit()
                 else:
