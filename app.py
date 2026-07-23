@@ -969,7 +969,8 @@ def poll_now():
 @app.route('/api/admin/debug-repo/<int:repo_id>', methods=['GET'])
 @admin_required
 def debug_repo(repo_id):
-    """Debug endpoint: Test fetching the latest release for a specific repo and return the raw result."""
+    """Debug endpoint: Test fetching the latest release for a specific repo via RAW API call.
+    Bypasses the try/except in get_latest_release to show the actual error."""
     repo = db.session.get(Repository, repo_id)
     if not repo:
         return jsonify({'error': 'Repository not found'}), 404
@@ -988,45 +989,85 @@ def debug_repo(repo_id):
             'body_length': len(repo.latest_release_body or ''),
             'has_url': bool(repo.latest_release_url),
         },
-        'api_test': None
+        'api_test': None,
     }
 
     try:
-        api_handler = get_api_handler(repo.platform)
-        if repo.platform == 'github':
+        if repo.platform == 'gitlab':
+            # Make the RAW API call to see the ACTUAL error
+            import urllib.parse
+
+            base_url = 'https://gitlab.com' if not repo.instance_url else f'https://{repo.instance_url}'
+            encoded_path = urllib.parse.quote(repo.repo_owner, safe='')
+            api_url = f'{base_url}/api/v4/projects/{encoded_path}/releases?per_page=20'
+
+            result['api_test'] = {
+                'request_url': api_url,
+                'has_token': bool(gitlab_api.get_token()),
+            }
+
+            try:
+                resp = requests.get(api_url, timeout=30)
+                result['api_test']['http_status'] = resp.status_code
+                result['api_test']['headers_received'] = dict(resp.headers)
+
+                if resp.status_code == 200:
+                    releases = resp.json()
+                    result['api_test']['release_count'] = len(releases)
+                    if releases:
+                        r = releases[0]
+                        result['api_test']['success'] = True
+                        result['api_test']['tag_name'] = r.get('tag_name')
+                        result['api_test']['name'] = r.get('name')
+                        body = r.get('description', '')[:500]
+                        result['api_test']['has_body'] = bool(body)
+                        result['api_test']['body_length'] = len(body)
+                        result['api_test']['body_preview'] = body[:200]
+                    else:
+                        result['api_test']['success'] = False
+                        result['api_test']['error'] = 'API returned empty releases array'
+                else:
+                    result['api_test']['success'] = False
+                    result['api_test']['error'] = f'HTTP {resp.status_code}'
+                    result['api_test']['response_body'] = resp.text[:500]
+            except requests.exceptions.SSLError as e:
+                result['api_test']['success'] = False
+                result['api_test']['error'] = f'SSL Error: {str(e)}'
+            except requests.exceptions.ConnectionError as e:
+                result['api_test']['success'] = False
+                result['api_test']['error'] = f'Connection Error: {str(e)}'
+            except requests.exceptions.Timeout as e:
+                result['api_test']['success'] = False
+                result['api_test']['error'] = f'Timeout: {str(e)}'
+            except requests.exceptions.RequestException as e:
+                result['api_test']['success'] = False
+                result['api_test']['error'] = f'Request Error: {type(e).__name__}: {str(e)}'
+        elif repo.platform == 'github':
+            # For GitHub, go through the normal handler (it already has good error logging)
+            api_handler = get_api_handler(repo.platform)
             latest = api_handler.get_latest_release(
                 repo.repo_owner, repo.repo_name,
                 include_prereleases=repo.notify_pre_releases
             )
-        elif repo.platform == 'gitlab':
-            latest = api_handler.get_latest_release(
-                repo.repo_owner,
-                include_prereleases=repo.notify_pre_releases,
-                instance_url=repo.instance_url
-            )
+            if latest:
+                result['api_test'] = {
+                    'success': True,
+                    'tag_name': latest['tag_name'],
+                    'name': latest['name'],
+                    'has_body': bool(latest.get('body', '')),
+                    'body_length': len(latest.get('body', '')),
+                    'body_preview': (latest.get('body', '') or '')[:200],
+                    'html_url': latest['html_url'],
+                    'prerelease': latest['prerelease'],
+                    'published_at': latest.get('published_at'),
+                }
+            else:
+                result['api_test'] = {
+                    'success': False,
+                    'error': 'No release data returned',
+                }
         else:
             result['api_test'] = {'error': f'Unknown platform: {repo.platform}'}
-            return jsonify(result)
-
-        if latest:
-            result['api_test'] = {
-                'success': True,
-                'tag_name': latest['tag_name'],
-                'name': latest['name'],
-                'has_body': bool(latest.get('body', '')),
-                'body_length': len(latest.get('body', '')),
-                'body_preview': (latest.get('body', '') or '')[:200],
-                'html_url': latest['html_url'],
-                'prerelease': latest['prerelease'],
-                'published_at': latest.get('published_at'),
-            }
-        else:
-            result['api_test'] = {
-                'success': False,
-                'error': 'API returned no release data (no releases found or HTTP error)',
-            }
-    except ValueError as e:
-        result['api_test'] = {'success': False, 'error': str(e)}
     except Exception as e:
         result['api_test'] = {'success': False, 'error': f'{type(e).__name__}: {str(e)}'}
 
