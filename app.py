@@ -8,6 +8,7 @@ import time
 import requests
 import json
 import os
+import urllib.parse
 from functools import wraps
 
 app = Flask(__name__)
@@ -42,6 +43,8 @@ class Repository(db.Model):
     repo_url = db.Column(db.String(500), nullable=False)
     repo_owner = db.Column(db.String(200), nullable=False)
     repo_name = db.Column(db.String(200), nullable=False)
+    platform = db.Column(db.String(20), default='github')
+    instance_url = db.Column(db.String(500))
     latest_release = db.Column(db.String(100))
     latest_release_url = db.Column(db.String(500))
     latest_release_body = db.Column(db.Text)
@@ -61,9 +64,12 @@ class Config(db.Model):
     key = db.Column(db.String(100), unique=True, nullable=False)
     value = db.Column(db.String(500))
 
-class GitHubToken(db.Model):
+class PlatformToken(db.Model):
+    __tablename__ = 'github_token'
     id = db.Column(db.Integer, primary_key=True)
-    token = db.Column(db.String(200), nullable=False)
+    platform = db.Column(db.String(20), nullable=False, default='github')
+    token = db.Column(db.String(500), nullable=False)
+    label = db.Column(db.String(100))
     last_used = db.Column(db.DateTime)
     rate_limit_remaining = db.Column(db.Integer, default=60)
     rate_limit_reset = db.Column(db.DateTime)
@@ -74,7 +80,7 @@ class GitHubAPI:
         self.current_token_index = 0
     
     def get_token(self):
-        tokens = GitHubToken.query.all()
+        tokens = PlatformToken.query.filter_by(platform='github').all()
         if not tokens:
             return None
         
@@ -173,14 +179,161 @@ class GitHubAPI:
             remaining = resp.headers.get('X-RateLimit-Remaining')
             reset = resp.headers.get('X-RateLimit-Reset')
             if remaining:
-                token_obj = GitHubToken.query.filter_by(token=token).first()
+                token_obj = PlatformToken.query.filter_by(token=token).first()
                 if token_obj:
                     token_obj.rate_limit_remaining = int(remaining)
                     if reset:
                         token_obj.rate_limit_reset = datetime.fromtimestamp(int(reset), tz=timezone.utc)
                     db.session.commit()
 
+    def test_token(self, token):
+        """Test if a GitHub token is valid by making a simple API call."""
+        url = "https://api.github.com/rate_limit"
+        headers = {'Authorization': f'token {token}'}
+        try:
+            resp = requests.get(url, headers=headers, timeout=10)
+            return resp.status_code == 200
+        except:
+            return False
+
 github_api = GitHubAPI()
+
+
+class GitLabAPI:
+    """Handler for GitLab Releases API (supports gitlab.com and self-hosted instances)."""
+
+    def __init__(self):
+        self.current_token_index = 0
+
+    def get_token(self):
+        tokens = PlatformToken.query.filter_by(platform='gitlab').all()
+        if not tokens:
+            return None
+
+        now = datetime.now(timezone.utc)
+        for i in range(len(tokens)):
+            idx = (self.current_token_index + i) % len(tokens)
+            token = tokens[idx]
+
+            if token.rate_limit_remaining > 0 or (token.rate_limit_reset and token.rate_limit_reset < now):
+                self.current_token_index = idx
+                return token.token
+
+        return None
+
+    def _build_base_url(self, instance_url=None):
+        if instance_url:
+            return f"https://{instance_url}"
+        return "https://gitlab.com"
+
+    def _build_release_html_url(self, project_path, tag_name, instance_url=None):
+        base = self._build_base_url(instance_url)
+        return f"{base}/{project_path}/-/releases/{tag_name}"
+
+    def _update_rate_limit(self, token, resp):
+        if token:
+            remaining = resp.headers.get('RateLimit-Remaining')
+            reset = resp.headers.get('RateLimit-Reset')
+            if remaining:
+                token_obj = PlatformToken.query.filter_by(token=token).first()
+                if token_obj:
+                    token_obj.rate_limit_remaining = int(remaining)
+                    if reset:
+                        try:
+                            token_obj.rate_limit_reset = datetime.fromtimestamp(int(reset), tz=timezone.utc)
+                        except (ValueError, OSError):
+                            pass
+                    db.session.commit()
+
+    def get_latest_release(self, project_path, include_prereleases=False, instance_url=None):
+        """
+        Fetch the latest release for a GitLab project.
+        
+        Args:
+            project_path: URL-encoded project path (e.g., 'owner/project' or 'group/subgroup/project')
+            include_prereleases: If True, include pre-releases in the latest check
+            instance_url: For self-hosted GitLab instances (e.g., 'gitlab.example.com')
+        """
+        base_url = self._build_base_url(instance_url)
+        encoded_path = urllib.parse.quote(project_path, safe='')
+
+        # GitLab doesn't have a dedicated "latest non-prerelease" endpoint.
+        # We always fetch the recent releases list and filter if needed.
+        url = f"{base_url}/api/v4/projects/{encoded_path}/releases?per_page=20"
+
+        headers = {}
+        token = self.get_token()
+        if token:
+            headers['PRIVATE-TOKEN'] = token
+
+        try:
+            resp = requests.get(url, headers=headers, timeout=30)
+            self._update_rate_limit(token, resp)
+
+            if resp.status_code == 200:
+                releases = resp.json()
+                if not releases:
+                    return None
+
+                if include_prereleases:
+                    # Return the most recent release (list is sorted by released_at desc)
+                    data = releases[0]
+                else:
+                    # Find the first non-prerelease
+                    data = None
+                    for release in releases:
+                        if not release.get('prerelease', False):
+                            data = release
+                            break
+                    if not data:
+                        data = releases[0]  # fallback to latest if no stable release
+
+                tag_name = data.get('tag_name', '')
+                return {
+                    'tag_name': tag_name,
+                    'html_url': self._build_release_html_url(project_path, tag_name, instance_url),
+                    'name': data.get('name'),
+                    'body': (data.get('description') or '')[:500],
+                    'published_at': data.get('released_at'),
+                    'prerelease': data.get('prerelease', False)
+                }
+            elif resp.status_code == 404:
+                return None
+            return None
+        except requests.exceptions.Timeout:
+            print(f"Timeout fetching release for {project_path} - will retry next cycle")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Network error fetching release for {project_path}: {e}")
+            return None
+        except Exception as e:
+            print(f"Error fetching release for {project_path}: {e}")
+            return None
+
+    def test_token(self, token, instance_url=None):
+        """Test if a GitLab token is valid by making a simple API call."""
+        base_url = self._build_base_url(instance_url)
+        url = f"{base_url}/api/v4/user"
+        headers = {'PRIVATE-TOKEN': token}
+        try:
+            resp = requests.get(url, headers=headers, timeout=10)
+            return resp.status_code == 200
+        except:
+            return False
+
+
+gitlab_api = GitLabAPI()
+
+
+def get_api_handler(platform):
+    """Return the appropriate API handler for the given platform."""
+    if platform == 'github':
+        return github_api
+    elif platform == 'gitlab':
+        return gitlab_api
+    else:
+        raise ValueError(f"Unsupported platform: {platform}")
+
 
 # Monitoring Thread
 class MonitoringService:
@@ -214,11 +367,26 @@ class MonitoringService:
     
     def _check_repositories(self):
         repos = Repository.query.all()
-        
+
         for repo in repos:
             try:
-                latest = github_api.get_latest_release(repo.repo_owner, repo.repo_name, include_prereleases=repo.notify_pre_releases)
-                
+                api_handler = get_api_handler(repo.platform)
+
+                if repo.platform == 'github':
+                    latest = api_handler.get_latest_release(
+                        repo.repo_owner, repo.repo_name,
+                        include_prereleases=repo.notify_pre_releases
+                    )
+                elif repo.platform == 'gitlab':
+                    latest = api_handler.get_latest_release(
+                        repo.repo_owner,
+                        include_prereleases=repo.notify_pre_releases,
+                        instance_url=repo.instance_url
+                    )
+                else:
+                    print(f"Unknown platform '{repo.platform}' for repo {repo.id}")
+                    continue
+
                 if latest and latest['tag_name'] != repo.latest_release:
                     # New release detected
                     old_release = repo.latest_release
@@ -227,14 +395,14 @@ class MonitoringService:
                     repo.latest_release_body = latest.get('body', '')
                     repo.last_checked = datetime.now(timezone.utc)
                     db.session.commit()
-                    
+
                     # Send notifications (only if there was a previous release)
                     if old_release:
                         self._send_notifications(repo, latest)
                 else:
                     repo.last_checked = datetime.now(timezone.utc)
                     db.session.commit()
-                
+
                 time.sleep(1)  # Rate limiting between repos
             except Exception as e:
                 print(f"Error checking {repo.repo_owner}/{repo.repo_name}: {e}")
@@ -495,35 +663,78 @@ def repositories():
     elif request.method == 'POST':
         data = request.json
         repo_url = data.get('repo_url', '').strip()
-        
-        # Parse GitHub URL
+
+        # Determine platform from URL
+        platform = None
+        owner = None
+        name = None
+        instance_url = None
+
+        # GitHub
         if 'github.com/' in repo_url:
+            platform = 'github'
             parts = repo_url.split('github.com/')[-1].strip('/').split('/')
             if len(parts) >= 2:
                 owner, name = parts[0], parts[1]
             else:
                 return jsonify({'error': 'Invalid GitHub URL'}), 400
+
+        # GitLab (includes self-hosted instances)
+        elif 'gitlab' in repo_url:
+            platform = 'gitlab'
+            # Parse the URL to extract project path and instance
+            if '//' in repo_url:
+                after_protocol = repo_url.split('//', 1)[1]
+            else:
+                after_protocol = repo_url
+
+            if '/' in after_protocol:
+                host_part = after_protocol.split('/', 1)[0]
+                path_part = after_protocol.split('/', 1)[1].strip('/')
+            else:
+                return jsonify({'error': 'Invalid GitLab URL'}), 400
+
+            path_parts = path_part.split('/')
+            if len(path_parts) < 2:
+                return jsonify({'error': 'Invalid GitLab URL: project path too short'}), 400
+
+            # Full project path (supports subgroups)
+            owner = path_part  # e.g., "group/subgroup/project" or "owner/project"
+            name = path_parts[-1]
+
+            # Detect if self-hosted
+            if host_part not in ('gitlab.com', 'www.gitlab.com'):
+                instance_url = host_part
         else:
-            return jsonify({'error': 'Invalid GitHub URL'}), 400
-        
+            return jsonify({'error': 'Unsupported repository URL. Currently supported: GitHub (github.com), GitLab (gitlab.com, or self-hosted)'}), 400
+
         # Check if already exists
         existing = Repository.query.filter_by(
             user_id=session['user_id'],
-            repo_owner=owner,
-            repo_name=name
+            repo_url=repo_url
         ).first()
-        
+
         if existing:
             return jsonify({'error': 'Repository already added'}), 400
-        
+
         # Fetch initial release info
-        latest = github_api.get_latest_release(owner, name)
-        
+        latest = None
+        try:
+            api_handler = get_api_handler(platform)
+            if platform == 'github':
+                latest = api_handler.get_latest_release(owner, name)
+            elif platform == 'gitlab':
+                latest = api_handler.get_latest_release(owner, instance_url=instance_url)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
+
         repo = Repository(
             user_id=session['user_id'],
-            repo_url=f"https://github.com/{owner}/{name}",
+            repo_url=repo_url,
             repo_owner=owner,
             repo_name=name,
+            platform=platform,
+            instance_url=instance_url,
             latest_release=latest['tag_name'] if latest else None,
             latest_release_url=latest['html_url'] if latest else None,
             latest_release_body=latest.get('body', '') if latest else None,
@@ -531,7 +742,7 @@ def repositories():
         )
         db.session.add(repo)
         db.session.commit()
-        
+
         return jsonify({'message': 'Repository added', 'id': repo.id}), 201
 
 @app.route('/api/repositories/<int:repo_id>/pre-releases', methods=['PUT'])
@@ -616,7 +827,7 @@ def test_apprise_endpoint(endpoint_id):
         apobj = apprise.Apprise()
         apobj.add(real_url)
         success = apobj.notify(
-            title="Test Notification - GitHub Release Monitor",
+            title="Test Notification - Hubrise Release Monitor",
             body="This is a test notification. If you received this, your Apprise endpoint is configured correctly!"
         )
         if success:
@@ -634,14 +845,16 @@ def admin_config():
     if request.method == 'GET':
         interval = Config.query.filter_by(key='polling_interval').first()
         reg_enabled = Config.query.filter_by(key='registrations_enabled').first()
-        tokens = GitHubToken.query.all()
-        
+        tokens = PlatformToken.query.all()
+
         return jsonify({
             'polling_interval': int(interval.value) if interval else 60,
             'registrations_enabled': reg_enabled.value == 'true' if reg_enabled else True,
             'tokens': [{
                 'id': t.id,
                 'token': t.token[:8] + '...',
+                'platform': t.platform,
+                'label': t.label,
                 'rate_limit_remaining': t.rate_limit_remaining,
                 'rate_limit_reset': t.rate_limit_reset.isoformat() if t.rate_limit_reset else None
             } for t in tokens]
@@ -681,19 +894,42 @@ def admin_tokens():
     if request.method == 'POST':
         data = request.json
         token = data.get('token', '').strip()
-        
+        platform = data.get('platform', 'github').strip().lower()
+        label = data.get('label', '').strip()
+
         if not token:
             return jsonify({'error': 'Token required'}), 400
-        
-        github_token = GitHubToken(token=token)
-        db.session.add(github_token)
+
+        if platform not in ('github', 'gitlab'):
+            return jsonify({'error': 'Invalid platform. Supported: github, gitlab'}), 400
+
+        # Validate the token by making a test call
+        try:
+            api_handler = get_api_handler(platform)
+            if platform == 'gitlab':
+                is_valid = api_handler.test_token(token)
+            else:
+                is_valid = api_handler.test_token(token)
+
+            if not is_valid:
+                return jsonify({'error': f'Token validation failed for {platform}. Check the token is correct and has the right permissions.'}), 400
+        except Exception as e:
+            print(f"Token validation error: {e}")
+            # Allow adding even if validation fails (network issue)
+
+        platform_token = PlatformToken(
+            token=token,
+            platform=platform,
+            label=label or f"{platform.title()} Token"
+        )
+        db.session.add(platform_token)
         db.session.commit()
-        
-        return jsonify({'message': 'Token added', 'id': github_token.id}), 201
-    
+
+        return jsonify({'message': f'{platform.title()} token added', 'id': platform_token.id}), 201
+
     elif request.method == 'DELETE':
         token_id = request.json.get('id')
-        token = db.session.get(GitHubToken, token_id)
+        token = db.session.get(PlatformToken, token_id)
         if token:
             db.session.delete(token)
             db.session.commit()
@@ -819,6 +1055,49 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"Migration check: {e}")
         
+        # Migrate existing database - add platform and instance_url columns
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as conn:
+                result = conn.execute(text("PRAGMA table_info(repository)")).fetchall()
+                columns = [row[1] for row in result]
+
+                if 'platform' not in columns:
+                    print("Migrating database: Adding platform column...")
+                    conn.execute(text("ALTER TABLE repository ADD COLUMN platform VARCHAR(20) DEFAULT 'github'"))
+                    conn.commit()
+                    print("Migration complete!")
+
+                if 'instance_url' not in columns:
+                    print("Migrating database: Adding instance_url column...")
+                    conn.execute(text("ALTER TABLE repository ADD COLUMN instance_url VARCHAR(500)"))
+                    conn.commit()
+                    print("Migration complete!")
+
+                # Migrate github_token table - add platform and label columns
+                result = conn.execute(text("PRAGMA table_info(github_token)")).fetchall()
+                columns = [row[1] for row in result]
+
+                if 'platform' not in columns:
+                    print("Migrating database: Adding platform column to github_token...")
+                    conn.execute(text("ALTER TABLE github_token ADD COLUMN platform VARCHAR(20) DEFAULT 'github'"))
+                    conn.commit()
+                    # Set existing tokens to 'github'
+                    conn.execute(text("UPDATE github_token SET platform = 'github' WHERE platform IS NULL"))
+                    conn.commit()
+                    print("Migration complete!")
+
+                if 'label' not in columns:
+                    print("Migrating database: Adding label column to github_token...")
+                    conn.execute(text("ALTER TABLE github_token ADD COLUMN label VARCHAR(100)"))
+                    conn.commit()
+                    # Set default labels for existing tokens
+                    conn.execute(text("UPDATE github_token SET label = 'GitHub Token' WHERE label IS NULL"))
+                    conn.commit()
+                    print("Migration complete!")
+        except Exception as e:
+            print(f"Migration check: {e}")
+
         # Set default polling interval
         if not Config.query.filter_by(key='polling_interval').first():
             db.session.add(Config(key='polling_interval', value='60'))
@@ -828,6 +1107,6 @@ if __name__ == '__main__':
         db.session.commit()
     
     monitor_service.start()
-    print("Starting GitHub Release Monitor...")
+    print("Starting Hubrise Release Monitor...")
     print("Access the web interface at: http://0.0.0.0:5000")
     app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
