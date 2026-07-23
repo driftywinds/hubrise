@@ -70,6 +70,7 @@ class PlatformToken(db.Model):
     platform = db.Column(db.String(20), nullable=False, default='github')
     token = db.Column(db.String(500), nullable=False)
     label = db.Column(db.String(100))
+    instance_url = db.Column(db.String(500))
     last_used = db.Column(db.DateTime)
     rate_limit_remaining = db.Column(db.Integer, default=60)
     rate_limit_reset = db.Column(db.DateTime)
@@ -344,12 +345,175 @@ class GitLabAPI:
 gitlab_api = GitLabAPI()
 
 
+# Supported Gitea-compatible platforms and their known instances
+GITEA_COMPATIBLE_PLATFORMS = ('codeberg', 'gitea', 'forgejo')
+GITEA_KNOWN_INSTANCES = {
+    'codeberg': 'codeberg.org',
+    'gitea': 'demo.gitea.com',
+    'forgejo': None,  # Forgejo is self-hosted only
+}
+
+
+class GiteaCompatibleAPI:
+    """Handler for Gitea-compatible Releases API (Codeberg, Gitea, Forgejo).
+    All three share the same API structure at /api/v1/.
+    Supports self-hosted instances."""
+
+    def __init__(self):
+        self.current_token_index = 0
+
+    def get_token(self, platform, instance_url=None):
+        """Get a token for the specific Gitea-compatible platform and instance."""
+        if instance_url:
+            tokens = PlatformToken.query.filter_by(platform=platform, instance_url=instance_url).all()
+            if not tokens:
+                tokens = PlatformToken.query.filter_by(platform=platform, instance_url=None).all()
+        else:
+            tokens = PlatformToken.query.filter_by(platform=platform).all()
+        if not tokens:
+            return None
+
+        now = datetime.now(timezone.utc)
+        for i in range(len(tokens)):
+            idx = (self.current_token_index + i) % len(tokens)
+            token = tokens[idx]
+
+            if token.rate_limit_remaining > 0 or (token.rate_limit_reset and token.rate_limit_reset < now):
+                self.current_token_index = idx
+                return token.token
+
+        return None
+
+    def _build_base_url(self, platform, instance_url=None):
+        """Build the base URL for the platform."""
+        if instance_url:
+            return f"https://{instance_url}"
+        known = GITEA_KNOWN_INSTANCES.get(platform)
+        if known:
+            return f"https://{known}"
+        raise ValueError(f"No instance URL provided for platform '{platform}'")
+
+    def _build_release_html_url(self, owner, repo, tag_name, base_url):
+        """Build the HTML URL for a release."""
+        return f"{base_url}/{owner}/{repo}/releases/tag/{tag_name}"
+
+    def _update_rate_limit(self, token, resp):
+        """Update rate limit info for the given token."""
+        if token:
+            remaining = resp.headers.get('X-RateLimit-Remaining')
+            reset = resp.headers.get('X-RateLimit-Reset')
+            if remaining:
+                token_obj = PlatformToken.query.filter_by(token=token).first()
+                if token_obj:
+                    token_obj.rate_limit_remaining = int(remaining)
+                    if reset:
+                        try:
+                            token_obj.rate_limit_reset = datetime.fromtimestamp(int(reset), tz=timezone.utc)
+                        except (ValueError, OSError):
+                            pass
+                    db.session.commit()
+
+    def _fetch_releases(self, url, headers):
+        """Fetch releases from the API. Returns list of releases or None."""
+        resp = requests.get(url, headers=headers, timeout=30)
+        token = headers.get('Authorization', '').replace('token ', '')
+        self._update_rate_limit(token, resp)
+
+        if resp.status_code != 200:
+            return None
+
+        releases = resp.json()
+        return releases if releases else None
+
+    def _process_releases(self, releases, owner, repo, include_prereleases, base_url):
+        """Process a list of releases and extract the latest one."""
+        if not releases:
+            return None
+
+        if include_prereleases:
+            data = releases[0]
+        else:
+            data = None
+            for release in releases:
+                if not release.get('prerelease', False):
+                    data = release
+                    break
+            if not data:
+                data = releases[0]
+
+        tag_name = data.get('tag_name', '')
+        return {
+            'tag_name': tag_name,
+            'html_url': self._build_release_html_url(owner, repo, tag_name, base_url),
+            'name': data.get('name'),
+            'body': (data.get('body') or '')[:500],
+            'published_at': data.get('created_at') or data.get('published_at'),
+            'prerelease': data.get('prerelease', False)
+        }
+
+    def get_latest_release(self, owner, repo, include_prereleases=False, platform='gitea', instance_url=None):
+        """
+        Fetch the latest release for a Gitea-compatible repository.
+
+        Args:
+            owner: Repository owner (e.g., 'driftywinds')
+            repo: Repository name (e.g., 'hubrise')
+            include_prereleases: If True, include pre-releases
+            platform: One of 'codeberg', 'gitea', 'forgejo'
+            instance_url: For self-hosted instances (e.g., 'gitea.example.com')
+        """
+        base_url = self._build_base_url(platform, instance_url)
+        url = f"{base_url}/api/v1/repos/{owner}/{repo}/releases?limit=20"
+
+        releases = None
+        token = self.get_token(platform, instance_url)
+
+        try:
+            # Try with token first
+            if token:
+                releases = self._fetch_releases(url, {'Authorization': f'token {token}'})
+
+            # If token-based request failed or no token, try without auth (public repos)
+            if releases is None:
+                releases = self._fetch_releases(url, {})
+        except requests.exceptions.Timeout:
+            print(f"Timeout fetching release for {owner}/{repo} on {platform} - will retry next cycle")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Network error fetching release for {owner}/{repo} on {platform}: {e}")
+            return None
+        except Exception as e:
+            print(f"Error fetching release for {owner}/{repo} on {platform}: {e}")
+            return None
+
+        if releases is None:
+            return None
+
+        return self._process_releases(releases, owner, repo, include_prereleases, base_url)
+
+    def test_token(self, token, platform='gitea', instance_url=None):
+        """Test if a token is valid by making a simple API call."""
+        base_url = self._build_base_url(platform, instance_url)
+        url = f"{base_url}/api/v1/user"
+        headers = {'Authorization': f'token {token}'}
+        try:
+            resp = requests.get(url, headers=headers, timeout=10)
+            return resp.status_code == 200
+        except:
+            return False
+
+
+gitea_api = GiteaCompatibleAPI()
+
+
 def get_api_handler(platform):
     """Return the appropriate API handler for the given platform."""
     if platform == 'github':
         return github_api
     elif platform == 'gitlab':
         return gitlab_api
+    elif platform in GITEA_COMPATIBLE_PLATFORMS:
+        return gitea_api
     else:
         raise ValueError(f"Unsupported platform: {platform}")
 
@@ -400,6 +564,13 @@ class MonitoringService:
                     latest = api_handler.get_latest_release(
                         repo.repo_owner,
                         include_prereleases=repo.notify_pre_releases,
+                        instance_url=repo.instance_url
+                    )
+                elif repo.platform in GITEA_COMPATIBLE_PLATFORMS:
+                    latest = api_handler.get_latest_release(
+                        repo.repo_owner, repo.repo_name,
+                        include_prereleases=repo.notify_pre_releases,
+                        platform=repo.platform,
                         instance_url=repo.instance_url
                     )
                 else:
@@ -703,6 +874,7 @@ def repositories():
     elif request.method == 'POST':
         data = request.json
         repo_url = data.get('repo_url', '').strip()
+        requested_platform = data.get('platform', '').strip().lower() if data.get('platform') else None
 
         # Determine platform from URL
         platform = None
@@ -745,8 +917,36 @@ def repositories():
             # Detect if self-hosted
             if host_part not in ('gitlab.com', 'www.gitlab.com'):
                 instance_url = host_part
+
+        # Gitea-compatible platforms (user must specify platform via dropdown)
+        elif requested_platform in GITEA_COMPATIBLE_PLATFORMS:
+            platform = requested_platform
+            if '//' in repo_url:
+                after_protocol = repo_url.split('//', 1)[1]
+            else:
+                after_protocol = repo_url
+
+            if '/' in after_protocol:
+                host_part = after_protocol.split('/', 1)[0]
+                path_part = after_protocol.split('/', 1)[1].strip('/')
+            else:
+                return jsonify({'error': 'Invalid URL: could not extract path'}), 400
+
+            path_parts = path_part.split('/')
+            if len(path_parts) < 2:
+                return jsonify({'error': 'Invalid URL: project path too short (expected owner/repo)'}), 400
+
+            owner = path_parts[0]
+            name = path_parts[1]
+
+            known_instance = GITEA_KNOWN_INSTANCES.get(platform)
+            if known_instance and host_part != known_instance:
+                instance_url = host_part
+            elif not known_instance:
+                instance_url = host_part
+
         else:
-            return jsonify({'error': 'Unsupported repository URL. Currently supported: GitHub (github.com), GitLab (gitlab.com, or self-hosted)'}), 400
+            return jsonify({'error': 'Unsupported repository URL. Currently supported: GitHub (github.com), GitLab (gitlab.com or self-hosted), Codeberg, Gitea, Forgejo (select platform from dropdown)'}), 400
 
         # Check if already exists
         existing = Repository.query.filter_by(
@@ -765,6 +965,10 @@ def repositories():
                 latest = api_handler.get_latest_release(owner, name)
             elif platform == 'gitlab':
                 latest = api_handler.get_latest_release(owner, instance_url=instance_url)
+            elif platform in GITEA_COMPATIBLE_PLATFORMS:
+                latest = api_handler.get_latest_release(
+                    owner, name, platform=platform, instance_url=instance_url
+                )
         except ValueError as e:
             return jsonify({'error': str(e)}), 400
 
@@ -895,6 +1099,7 @@ def admin_config():
                 'token': t.token[:8] + '...',
                 'platform': t.platform,
                 'label': t.label,
+                'instance_url': t.instance_url,
                 'rate_limit_remaining': t.rate_limit_remaining,
                 'rate_limit_reset': t.rate_limit_reset.isoformat() if t.rate_limit_reset else None
             } for t in tokens]
@@ -940,16 +1145,21 @@ def admin_tokens():
         if not token:
             return jsonify({'error': 'Token required'}), 400
 
-        if platform not in ('github', 'gitlab'):
-            return jsonify({'error': 'Invalid platform. Supported: github, gitlab'}), 400
+        if platform not in ('github', 'gitlab') + GITEA_COMPATIBLE_PLATFORMS:
+            return jsonify({'error': 'Invalid platform. Supported: github, gitlab, codeberg, gitea, forgejo'}), 400
 
         # Validate the token by making a test call
         try:
             api_handler = get_api_handler(platform)
-            if platform == 'gitlab':
+            if platform == 'github':
                 is_valid = api_handler.test_token(token)
+            elif platform == 'gitlab':
+                is_valid = api_handler.test_token(token)
+            elif platform in GITEA_COMPATIBLE_PLATFORMS:
+                instance_url = data.get('instance_url', '').strip() or None
+                is_valid = api_handler.test_token(token, platform=platform, instance_url=instance_url)
             else:
-                is_valid = api_handler.test_token(token)
+                is_valid = True
 
             if not is_valid:
                 return jsonify({'error': f'Token validation failed for {platform}. Check the token is correct and has the right permissions.'}), 400
@@ -957,10 +1167,15 @@ def admin_tokens():
             print(f"Token validation error: {e}")
             # Allow adding even if validation fails (network issue)
 
+        instance_url_val = None
+        if platform in GITEA_COMPATIBLE_PLATFORMS:
+            instance_url_val = data.get('instance_url', '').strip() or None
+
         platform_token = PlatformToken(
             token=token,
             platform=platform,
-            label=label or f"{platform.title()} Token"
+            label=label or f"{platform.title()} Token",
+            instance_url=instance_url_val
         )
         db.session.add(platform_token)
         db.session.commit()
@@ -1087,6 +1302,58 @@ def debug_repo(repo_id):
                     'success': False,
                     'error': 'No release data returned',
                 }
+        elif repo.platform in GITEA_COMPATIBLE_PLATFORMS:
+            # Gitea-compatible platforms (Codeberg, Gitea, Forgejo)
+            base_url = gitea_api._build_base_url(repo.platform, repo.instance_url)
+            api_url = f'{base_url}/api/v1/repos/{repo.repo_owner}/{repo.repo_name}/releases?limit=20'
+
+            result['api_test'] = {
+                'request_url': api_url,
+                '                has_token': bool(gitea_api.get_token(repo.platform, repo.instance_url)),
+                'platform': repo.platform,
+            }
+
+            try:
+                headers = {}
+                token = gitea_api.get_token(repo.platform, repo.instance_url)
+                if token:
+                    headers['Authorization'] = f'token {token}'
+
+                resp = requests.get(api_url, headers=headers, timeout=30)
+                result['api_test']['http_status'] = resp.status_code
+                result['api_test']['headers_received'] = dict(resp.headers)
+
+                if resp.status_code == 200:
+                    releases = resp.json()
+                    result['api_test']['release_count'] = len(releases)
+                    if releases:
+                        r = releases[0]
+                        result['api_test']['success'] = True
+                        result['api_test']['tag_name'] = r.get('tag_name')
+                        result['api_test']['name'] = r.get('name')
+                        body = (r.get('body') or '')[:500]
+                        result['api_test']['has_body'] = bool(body)
+                        result['api_test']['body_length'] = len(body)
+                        result['api_test']['body_preview'] = body[:200]
+                    else:
+                        result['api_test']['success'] = False
+                        result['api_test']['error'] = 'API returned empty releases array'
+                else:
+                    result['api_test']['success'] = False
+                    result['api_test']['error'] = f'HTTP {resp.status_code}'
+                    result['api_test']['response_body'] = resp.text[:500]
+            except requests.exceptions.SSLError as e:
+                result['api_test']['success'] = False
+                result['api_test']['error'] = f'SSL Error: {str(e)}'
+            except requests.exceptions.ConnectionError as e:
+                result['api_test']['success'] = False
+                result['api_test']['error'] = f'Connection Error: {str(e)}'
+            except requests.exceptions.Timeout as e:
+                result['api_test']['success'] = False
+                result['api_test']['error'] = f'Timeout: {str(e)}'
+            except requests.exceptions.RequestException as e:
+                result['api_test']['success'] = False
+                result['api_test']['error'] = f'Request Error: {type(e).__name__}: {str(e)}'
         else:
             result['api_test'] = {'error': f'Unknown platform: {repo.platform}'}
     except Exception as e:
@@ -1241,6 +1508,12 @@ if __name__ == '__main__':
                     conn.commit()
                     # Set default labels for existing tokens
                     conn.execute(text("UPDATE github_token SET label = 'GitHub Token' WHERE label IS NULL"))
+                    conn.commit()
+                    print("Migration complete!")
+
+                if 'instance_url' not in columns:
+                    print("Migrating database: Adding instance_url column to github_token...")
+                    conn.execute(text("ALTER TABLE github_token ADD COLUMN instance_url VARCHAR(500)"))
                     conn.commit()
                     print("Migration complete!")
         except Exception as e:
