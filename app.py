@@ -387,25 +387,38 @@ class MonitoringService:
                     print(f"Unknown platform '{repo.platform}' for repo {repo.id}")
                     continue
 
-                if latest and latest['tag_name'] != repo.latest_release:
-                    # New release detected
-                    old_release = repo.latest_release
-                    repo.latest_release = latest['tag_name']
-                    repo.latest_release_url = latest['html_url']
-                    repo.latest_release_body = latest.get('body', '')
-                    repo.last_checked = datetime.now(timezone.utc)
-                    db.session.commit()
+                if latest:
+                    # Check if this is a new/different release
+                    if latest['tag_name'] != repo.latest_release:
+                        # New release detected
+                        old_release = repo.latest_release
+                        repo.latest_release = latest['tag_name']
+                        repo.latest_release_url = latest['html_url']
+                        repo.latest_release_body = latest.get('body', '')
+                        repo.last_checked = datetime.now(timezone.utc)
+                        db.session.commit()
 
-                    # Send notifications (only if there was a previous release)
-                    if old_release:
-                        self._send_notifications(repo, latest)
+                        # Send notifications (only if there was a previous release)
+                        if old_release:
+                            self._send_notifications(repo, latest)
+                    else:
+                        # Same release tag — refresh body/URL if they were missing
+                        # (covers case where initial fetch stored the tag but body was empty)
+                        latest_body = latest.get('body', '')
+                        if not repo.latest_release_body and latest_body:
+                            repo.latest_release_body = latest_body
+                        if not repo.latest_release_url and latest.get('html_url'):
+                            repo.latest_release_url = latest['html_url']
+                        repo.last_checked = datetime.now(timezone.utc)
+                        db.session.commit()
                 else:
                     repo.last_checked = datetime.now(timezone.utc)
                     db.session.commit()
 
                 time.sleep(1)  # Rate limiting between repos
             except Exception as e:
-                print(f"Error checking {repo.repo_owner}/{repo.repo_name}: {e}")
+                display_name = repo.repo_owner if repo.platform == 'gitlab' else f"{repo.repo_owner}/{repo.repo_name}"
+                print(f"Error checking {display_name}: {e}")
     
     def _resolve_endpoint(self, endpoint_str):
         """
@@ -428,7 +441,12 @@ class MonitoringService:
         user = db.session.get(User, repo.user_id)
         endpoints = AppriseEndpoint.query.filter_by(user_id=user.id).all()
     
-        title = f"New Release: {repo.repo_owner}/{repo.repo_name}"
+        # Build display name based on platform
+        if repo.platform == 'gitlab':
+            display_name = repo.repo_owner
+        else:
+            display_name = f"{repo.repo_owner}/{repo.repo_name}"
+        title = f"New Release: {display_name}"
     
         # Get release notes
         release_body = release_info.get('body', '').strip()
@@ -652,6 +670,7 @@ def repositories():
             'repo_url': r.repo_url,
             'repo_owner': r.repo_owner,
             'repo_name': r.repo_name,
+            'platform': r.platform,
             'latest_release': r.latest_release,
             'latest_release_url': r.latest_release_url,
             'latest_release_body': r.latest_release_body,
@@ -945,6 +964,73 @@ def poll_now():
         return jsonify({'message': 'Poll completed successfully'})
     except Exception as e:
         return jsonify({'error': f'Poll failed: {str(e)}'}), 500
+
+
+@app.route('/api/admin/debug-repo/<int:repo_id>', methods=['GET'])
+@admin_required
+def debug_repo(repo_id):
+    """Debug endpoint: Test fetching the latest release for a specific repo and return the raw result."""
+    repo = db.session.get(Repository, repo_id)
+    if not repo:
+        return jsonify({'error': 'Repository not found'}), 404
+
+    result = {
+        'repo_id': repo.id,
+        'repo_url': repo.repo_url,
+        'repo_owner': repo.repo_owner,
+        'repo_name': repo.repo_name,
+        'platform': repo.platform,
+        'instance_url': repo.instance_url,
+        'notify_pre_releases': repo.notify_pre_releases,
+        'current_stored': {
+            'latest_release': repo.latest_release,
+            'has_body': bool(repo.latest_release_body),
+            'body_length': len(repo.latest_release_body or ''),
+            'has_url': bool(repo.latest_release_url),
+        },
+        'api_test': None
+    }
+
+    try:
+        api_handler = get_api_handler(repo.platform)
+        if repo.platform == 'github':
+            latest = api_handler.get_latest_release(
+                repo.repo_owner, repo.repo_name,
+                include_prereleases=repo.notify_pre_releases
+            )
+        elif repo.platform == 'gitlab':
+            latest = api_handler.get_latest_release(
+                repo.repo_owner,
+                include_prereleases=repo.notify_pre_releases,
+                instance_url=repo.instance_url
+            )
+        else:
+            result['api_test'] = {'error': f'Unknown platform: {repo.platform}'}
+            return jsonify(result)
+
+        if latest:
+            result['api_test'] = {
+                'success': True,
+                'tag_name': latest['tag_name'],
+                'name': latest['name'],
+                'has_body': bool(latest.get('body', '')),
+                'body_length': len(latest.get('body', '')),
+                'body_preview': (latest.get('body', '') or '')[:200],
+                'html_url': latest['html_url'],
+                'prerelease': latest['prerelease'],
+                'published_at': latest.get('published_at'),
+            }
+        else:
+            result['api_test'] = {
+                'success': False,
+                'error': 'API returned no release data (no releases found or HTTP error)',
+            }
+    except ValueError as e:
+        result['api_test'] = {'success': False, 'error': str(e)}
+    except Exception as e:
+        result['api_test'] = {'success': False, 'error': f'{type(e).__name__}: {str(e)}'}
+
+    return jsonify(result)
 
 @app.route('/api/admin/users', methods=['GET', 'POST'])
 @admin_required
