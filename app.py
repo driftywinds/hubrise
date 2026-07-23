@@ -245,9 +245,51 @@ class GitLabAPI:
                             pass
                     db.session.commit()
 
+    def _fetch_releases(self, url, headers):
+        """Make the API request and process the response into release data.
+        Returns (release_dict, used_token) on success, or None on failure."""
+        resp = requests.get(url, headers=headers, timeout=30)
+        used_token = headers.get('PRIVATE-TOKEN')
+        self._update_rate_limit(used_token, resp)
+
+        if resp.status_code != 200:
+            return None
+
+        releases = resp.json()
+        if not releases:
+            return None
+        return releases
+
+    def _process_releases(self, releases, project_path, include_prereleases, instance_url):
+        """Process a list of releases and extract the latest one."""
+        if not releases:
+            return None
+
+        if include_prereleases:
+            data = releases[0]
+        else:
+            data = None
+            for release in releases:
+                if not release.get('prerelease', False):
+                    data = release
+                    break
+            if not data:
+                data = releases[0]
+
+        tag_name = data.get('tag_name', '')
+        return {
+            'tag_name': tag_name,
+            'html_url': self._build_release_html_url(project_path, tag_name, instance_url),
+            'name': data.get('name'),
+            'body': (data.get('description') or '')[:500],
+            'published_at': data.get('released_at'),
+            'prerelease': data.get('prerelease', False)
+        }
+
     def get_latest_release(self, project_path, include_prereleases=False, instance_url=None):
         """
         Fetch the latest release for a GitLab project.
+        Falls back to unauthenticated request if token is invalid.
         
         Args:
             project_path: URL-encoded project path (e.g., 'owner/project' or 'group/subgroup/project')
@@ -261,45 +303,17 @@ class GitLabAPI:
         # We always fetch the recent releases list and filter if needed.
         url = f"{base_url}/api/v4/projects/{encoded_path}/releases?per_page=20"
 
-        headers = {}
+        releases = None
         token = self.get_token()
-        if token:
-            headers['PRIVATE-TOKEN'] = token
 
         try:
-            resp = requests.get(url, headers=headers, timeout=30)
-            self._update_rate_limit(token, resp)
+            # Try with token first (may return None if token is invalid/expired)
+            if token:
+                releases = self._fetch_releases(url, {'PRIVATE-TOKEN': token})
 
-            if resp.status_code == 200:
-                releases = resp.json()
-                if not releases:
-                    return None
-
-                if include_prereleases:
-                    # Return the most recent release (list is sorted by released_at desc)
-                    data = releases[0]
-                else:
-                    # Find the first non-prerelease
-                    data = None
-                    for release in releases:
-                        if not release.get('prerelease', False):
-                            data = release
-                            break
-                    if not data:
-                        data = releases[0]  # fallback to latest if no stable release
-
-                tag_name = data.get('tag_name', '')
-                return {
-                    'tag_name': tag_name,
-                    'html_url': self._build_release_html_url(project_path, tag_name, instance_url),
-                    'name': data.get('name'),
-                    'body': (data.get('description') or '')[:500],
-                    'published_at': data.get('released_at'),
-                    'prerelease': data.get('prerelease', False)
-                }
-            elif resp.status_code == 404:
-                return None
-            return None
+            # If token-based request failed or no token, try without auth (public repos)
+            if releases is None:
+                releases = self._fetch_releases(url, {})
         except requests.exceptions.Timeout:
             print(f"Timeout fetching release for {project_path} - will retry next cycle")
             return None
@@ -309,6 +323,11 @@ class GitLabAPI:
         except Exception as e:
             print(f"Error fetching release for {project_path}: {e}")
             return None
+
+        if releases is None:
+            return None
+
+        return self._process_releases(releases, project_path, include_prereleases, instance_url)
 
     def test_token(self, token, instance_url=None):
         """Test if a GitLab token is valid by making a simple API call."""
